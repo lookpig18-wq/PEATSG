@@ -1,0 +1,5 @@
+{
+  "name": "ระบบติดตามสถานะการเบิกจ่าย กฟส.ทสก.",
+  "description": "A web application to track payment disbursement status, allowing users to add, edit, filter, and view a summary of disbursements.",
+  "requestFramePermissions": []
+}

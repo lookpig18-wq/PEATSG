@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบติดตามสถานะการเบิกจ่าย</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #a855f7, #f59e0b);
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    </style>
+</head>
+<body class="text-black">
+
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm">
+            <h2 class="text-2xl font-bold text-center text-gray-900 mb-6">กรุณาเข้าสู่ระบบ</h2>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">ชื่อผู้ใช้</label>
+                    <input type="text" id="username" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black">
+                </div>
+                <div class="relative">
+                    <label for="password" class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
+                    <input type="password" id="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black pr-10">
+                    <button type="button" id="toggle-password-btn" class="absolute inset-y-0 right-0 top-6 flex items-center px-3 text-gray-500">
+                        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                    </button>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm text-center hidden">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p>
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">เข้าสู่ระบบ (Admin)</button>
+                </div>
+            </form>
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="bg-white px-2 text-gray-500">หรือ</span>
+                </div>
+            </div>
+            <button id="guest-login-btn" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">เข้าชมแบบผู้เยี่ยมชม</button>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="mb-8 flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-3xl font-bold text-white">ระบบติดตามสถานะการเบิกจ่าย กฟส.ทสก.</h1>
+            <div class="flex items-center space-x-4">
+                <button id="export-btn-header" class="inline-flex items-center justify-center space-x-2 mt-2 sm:mt-0 text-sm bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h1v4"/><path d="M12 13h1v4"/><path d="M15 13h1v4"/><path d="M8.5 13H8"/><path d="M12.5 13h-1"/><path d="M15.5 13h-1"/></svg>
+                    <span>ดาวน์โหลด Excel</span>
+                </button>
+                <button id="settings-btn" class="p-2 rounded-full hover:bg-white/20 admin-only">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                <button id="header-logout-btn" class="p-2 rounded-full hover:bg-white/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <div id="main-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div id="form-column" class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm admin-only">
+                <h2 id="form-title" class="text-xl font-bold mb-4">เพิ่มรายการใหม่</h2>
+                <form id="disbursement-form" class="space-y-4">
+                    <input type="hidden" id="disbursement-id">
+                    <div>
+                        <label for="date" class="block text-sm font-medium text-black">วันที่</label>
+                        <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-black">รายละเอียด</label>
+                        <input type="text" id="description" placeholder="เช่น ค่าเดินทาง, ค่าวัสดุ" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="price" class="block text-sm font-medium text-black">ราคา (บาท)</label>
+                            <input type="number" id="price" step="0.01" min="0" placeholder="1000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+                        <div>
+                            <label for="tax" class="block text-sm font-medium text-black">ภาษี (%)</label>
+                            <input type="number" id="tax" step="0.01" min="0" placeholder="7" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+                    </div>
+                     <div>
+                        <label for="total-price" class="block text-sm font-medium text-black">ราคารวม VAT</label>
+                        <input type="text" id="total-price" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
+                    </div>
+                    <div>
+                        <label for="wht" class="block text-sm font-medium text-black">หัก ณ ที่จ่าย (%)</label>
+                        <input type="number" id="wht" step="0.01" min="0" placeholder="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                     <div>
+                        <label for="net-total" class="block text-sm font-medium text-black">ยอดสุทธิหลังหักภาษี</label>
+                        <input type="text" id="net-total" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
+                    </div>
+                    <div>
+                        <label for="payee" class="block text-sm font-medium text-black">ผู้รับเงิน</label>
+                        <input type="text" id="payee" placeholder="ชื่อ-นามสกุล หรือ ชื่อบริษัท" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                    </div>
+                    <div>
+                        <label for="payment-method" class="block text-sm font-medium text-black">รูปแบบการจ่าย</label>
+                        <select id="payment-method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option>เงินสด</option>
+                            <option>เช็ค</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-black">สถานะ</label>
+                        <div class="mt-2 space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="status" value="รอดำเนินการ" class="text-indigo-600 focus:ring-indigo-500" checked>
+                                <span class="ml-2">รอดำเนินการ</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="status" value="กำลังดำเนินการ" class="text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-2">กำลังดำเนินการ</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="status" value="เสร็จสิ้น" class="text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-2">เสร็จสิ้น</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="attachment-container" class="hidden">
+                        <label for="attachment" class="block text-sm font-medium text-black">แนบไฟล์ PDF (สูงสุด 5MB)</label>
+                        <input type="file" id="attachment" accept=".pdf" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                        <p id="attachment-name" class="text-sm text-gray-500 mt-1"></p>
+                    </div>
+                    <div class="flex items-center space-x-4 pt-2">
+                        <button type="submit" id="submit-btn" class="w-full inline-flex items-center justify-center space-x-2 py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            <span>บันทึก</span>
+                        </button>
+                        <button type="button" id="cancel-btn" class="w-full inline-flex items-center justify-center space-x-2 py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+                            <span>ยกเลิก</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="table-column" class="lg:col-span-2">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                    <div class="w-full sm:w-auto">
+                        <label for="status-filter" class="text-sm font-medium text-white">กรองตามสถานะ:</label>
+                        <select id="status-filter" class="mt-1 sm:mt-0 ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="all">ทั้งหมด</option>
+                            <option value="รอดำเนินการ">รอดำเนินการ</option>
+                            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                            <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                     <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายละเอียด</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ยอดสุทธิ (บาท)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ไฟล์แนบ</th>
+                                    <th scope="col" class="relative px-6 py-3 admin-only">
+                                        <span class="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="disbursement-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Data will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="summary" class="mt-6 bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-lg font-bold">สรุปรายการเบิกจ่าย</h3>
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                        <div>
+                            <label for="summary-type-filter" class="block text-sm font-medium text-black">สรุปข้อมูลตาม</label>
+                            <select id="summary-type-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="all">ภาพรวมทั้งหมด</option>
+                                <option value="daily">รายวัน</option>
+                                <option value="monthly">รายเดือน</option>
+                                <option value="payee">รายชื่อผู้รับเงิน</option>
+                            </select>
+                        </div>
+                        <div id="specific-filters-container">
+                            <div id="daily-filter-container" class="hidden">
+                                <label for="summary-date" class="block text-sm font-medium text-black">เลือกวัน</label>
+                                <input type="date" id="summary-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
+                            <div id="monthly-filter-container" class="hidden">
+                                <label for="summary-month" class="block text-sm font-medium text-black">เลือกเดือน</label>
+                                <input type="month" id="summary-month" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
+                            <div id="payee-filter-container" class="hidden">
+                                <label for="summary-payee" class="block text-sm font-medium text-black">เลือกผู้รับเงิน</label>
+                                <select id="summary-payee" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="summary-content" class="mt-4 pt-4 border-t border-gray-200 text-black">กำลังคำนวณ...</div>
+                    <div id="summary-details-list" class="mt-4 max-h-60 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginScreen = document.getElementById('login-screen');
+            const appContainer = document.getElementById('app-container');
+            const loginForm = document.getElementById('login-form');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginError = document.getElementById('login-error');
+            const guestLoginBtn = document.getElementById('guest-login-btn');
+
+            const form = document.getElementById('disbursement-form');
+            const formTitle = document.getElementById('form-title');
+            const tableBody = document.getElementById('disbursement-table-body');
+            const statusFilter = document.getElementById('status-filter');
+            const summaryContent = document.getElementById('summary-content');
+            const disbursementIdInput = document.getElementById('disbursement-id');
+            const priceInput = document.getElementById('price');
+            const taxInput = document.getElementById('tax');
+            const totalPriceInput = document.getElementById('total-price');
+            const whtInput = document.getElementById('wht');
+            const netTotalInput = document.getElementById('net-total');
+            const submitBtn = document.getElementById('submit-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const exportBtnHeader = document.getElementById('export-btn-header');
+            const summaryTypeFilter = document.getElementById('summary-type-filter');
+            const specificFiltersContainer = document.getElementById('specific-filters-container');
+            const dailyFilterContainer = document.getElementById('daily-filter-container');
+            const summaryDate = document.getElementById('summary-date');
+            const monthlyFilterContainer = document.getElementById('monthly-filter-container');
+            const summaryMonth = document.getElementById('summary-month');
+            const payeeFilterContainer = document.getElementById('payee-filter-container');
+            const summaryPayee = document.getElementById('summary-payee');
+            const attachmentContainer = document.getElementById('attachment-container');
+            const attachmentInput = document.getElementById('attachment');
+            const attachmentNameDisplay = document.getElementById('attachment-name');
+            const statusRadios = document.querySelectorAll('input[name="status"]');
+            let disbursements = JSON.parse(localStorage.getItem('disbursements')) || [];
+
+            const updateSummary = () => {
+                const mainFilterValue = statusFilter.value;
+                let filteredForTable = disbursements.filter(d => mainFilterValue === 'all' || d.status === mainFilterValue);
+
+                const summaryType = summaryTypeFilter.value;
+                let summaryData = [];
+
+                switch (summaryType) {
+                    case 'daily':
+                        if (summaryDate.value) {
+                            summaryData = filteredForTable.filter(d => d.date === summaryDate.value);
+                        }
+                        break;
+                    case 'monthly':
+                        if (summaryMonth.value) {
+                            summaryData = filteredForTable.filter(d => d.date.startsWith(summaryMonth.value));
+                        }
+                        break;
+                    case 'payee':
+                        if (summaryPayee.value) {
+                            summaryData = filteredForTable.filter(d => d.payee === summaryPayee.value);
+                        }
+                        break;
+                    default: // 'all'
+                        summaryData = [...filteredForTable];
+                        break;
+                }
+
+                const total = summaryData.reduce((sum, d) => sum + parseFloat(d.netTotal), 0);
+                summaryContent.innerHTML = `
+                    <p>จำนวน (ตามตัวกรองสรุป): ${summaryData.length} รายการ</p>
+                    <p class="font-semibold">ยอดรวม (ตามตัวกรองสรุป): ${total.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
+                `;
+
+                const summaryDetailsList = document.getElementById('summary-details-list');
+                summaryDetailsList.innerHTML = '';
+
+                if (summaryData.length > 0 && summaryType !== 'all') {
+                    const list = document.createElement('ul');
+                    list.className = 'divide-y divide-gray-200';
+                    summaryData.forEach(d => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'py-2 flex justify-between items-center';
+                        listItem.innerHTML = `
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">${d.description} (${d.date})</p>
+                                <p class="text-sm text-gray-500">${d.payee}</p>
+                            </div>
+                            <p class="text-sm font-medium text-gray-900">${parseFloat(d.netTotal).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        `;
+                        list.appendChild(listItem);
+                    });
+                    summaryDetailsList.appendChild(list);
+                }
+            };
+
+            const renderTable = () => {
+                tableBody.innerHTML = '';
+                const filterValue = statusFilter.value;
+                const filteredData = disbursements.filter(d => filterValue === 'all' || d.status === filterValue);
+
+                if (filteredData.length === 0) {
+                    const colspan = sessionStorage.getItem('userRole') === 'admin' ? 7 : 5;
+                    tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-gray-500">ไม่พบรายการ</td></tr>`;
+                }
+
+                filteredData.forEach(d => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${d.date}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${d.description}</div>
+                            <div class="text-sm text-gray-500">${d.payee} (${d.paymentMethod})</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${parseFloat(d.netTotal).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                d.status === 'เสร็จสิ้น' ? 'bg-green-100 text-green-800' :
+                                d.status === 'กำลังดำเนินการ' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                            }">
+                                ${d.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${d.attachment ? `<a href="${d.attachment}" target="_blank" class="text-indigo-600 hover:text-indigo-900 inline-flex items-center space-x-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h4"/><path d="M10 16h4"/><path d="M12 10v6"/></svg> <span>ดูไฟล์</span></a>` : 'ไม่มี'}
+                        </td>
+                        ${sessionStorage.getItem('userRole') === 'admin' ? `
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="edit-btn text-indigo-600 hover:text-indigo-900 inline-flex items-center space-x-1" data-id="${d.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                <span>แก้ไข</span>
+                            </button>
+                            <button class="delete-btn text-red-600 hover:text-red-900 ml-4 inline-flex items-center space-x-1" data-id="${d.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                <span>ลบ</span>
+                            </button>
+                        </td>
+                        ` : ''}
+                    `;
+                    tableBody.appendChild(row);
+                });
+            };
+
+            const applyPermissions = () => {
+                const role = sessionStorage.getItem('userRole');
+                const adminElements = document.querySelectorAll('.admin-only');
+                const mainGrid = document.getElementById('main-grid');
+                const tableColumn = document.getElementById('table-column');
+
+                if (role === 'guest') {
+                    adminElements.forEach(el => el.classList.add('hidden'));
+                    mainGrid.classList.remove('lg:grid-cols-3');
+                    mainGrid.classList.add('lg:grid-cols-1');
+                    tableColumn.classList.remove('lg:col-span-2');
+                } else { // admin
+                    adminElements.forEach(el => el.classList.remove('hidden'));
+                    mainGrid.classList.add('lg:grid-cols-3');
+                    mainGrid.classList.remove('lg:grid-cols-1');
+                    tableColumn.classList.add('lg:col-span-2');
+                }
+                renderTable(); // Re-render table to show/hide action column
+            };
+
+            const showApp = () => {
+                loginScreen.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                applyPermissions();
+            };
+
+            const showLogin = () => {
+                loginScreen.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            };
+
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            if (users.length === 0) {
+                users.push({ username: '9012844', password: 'PEATSG043' });
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                showApp();
+            } else {
+                showLogin();
+            }
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const user = users.find(u => u.username === usernameInput.value && u.password === passwordInput.value);
+                if (user) {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('currentUser', usernameInput.value);
+                    sessionStorage.setItem('userRole', 'admin');
+                    showApp();
+                    loginError.classList.add('hidden');
+                } else {
+                    loginError.classList.remove('hidden');
+                }
+            });
+
+            guestLoginBtn.addEventListener('click', () => {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userRole', 'guest');
+                sessionStorage.removeItem('currentUser'); // Ensure no admin user is set
+                showApp();
+            });
+
+            const headerLogoutBtn = document.getElementById('header-logout-btn');
+            headerLogoutBtn.addEventListener('click', () => {
+                sessionStorage.clear();
+                // Reset layout to default before showing login
+                const mainGrid = document.getElementById('main-grid');
+                const tableColumn = document.getElementById('table-column');
+                mainGrid.classList.add('lg:grid-cols-3');
+                mainGrid.classList.remove('lg:grid-cols-1');
+                tableColumn.classList.add('lg:col-span-2');
+                showLogin();
+            });
+
+            const calculateAmounts = () => {
+                const price = parseFloat(priceInput.value) || 0;
+                const tax = parseFloat(taxInput.value) || 0;
+                const wht = parseFloat(whtInput.value) || 0;
+
+                const totalWithVat = price + (price * tax / 100);
+                const whtAmount = price * wht / 100; // หัก ณ ที่จ่ายคิดจากฐานราคาก่อน VAT
+                const netTotal = totalWithVat - whtAmount;
+
+                totalPriceInput.value = totalWithVat.toFixed(2);
+                netTotalInput.value = netTotal.toFixed(2);
+            };
+
+            priceInput.addEventListener('input', calculateAmounts);
+            taxInput.addEventListener('input', calculateAmounts);
+            whtInput.addEventListener('input', calculateAmounts);
+
+
+
+            const populatePayeeFilter = () => {
+                const payees = [...new Set(disbursements.map(d => d.payee))];
+                summaryPayee.innerHTML = '<option value="">-- เลือกผู้รับเงิน --</option>';
+                payees.sort().forEach(payee => {
+                    const option = document.createElement('option');
+                    option.value = payee;
+                    option.textContent = payee;
+                    summaryPayee.appendChild(option);
+                });
+            };
+
+            const resetForm = () => {
+                form.reset();
+                disbursementIdInput.value = '';
+                totalPriceInput.value = '';
+                attachmentInput.value = '';
+                attachmentNameDisplay.textContent = '';
+                attachmentContainer.classList.add('hidden');
+                document.querySelector('input[name="status"][value="รอดำเนินการ"]').checked = true;
+                formTitle.textContent = 'เพิ่มรายการใหม่';
+                submitBtn.textContent = 'บันทึก';
+                cancelBtn.style.display = 'none';
+            };
+
+            const handleStatusChange = () => {
+                const selectedStatus = document.querySelector('input[name="status"]:checked').value;
+                if (selectedStatus === 'เสร็จสิ้น') {
+                    attachmentContainer.classList.remove('hidden');
+                } else {
+                    attachmentContainer.classList.add('hidden');
+                    attachmentInput.value = ''; // Clear file input if status is not 'เสร็จสิ้น'
+                    attachmentNameDisplay.textContent = '';
+                }
+            };
+
+            statusRadios.forEach(radio => radio.addEventListener('change', handleStatusChange));
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const id = disbursementIdInput.value;
+                const selectedStatus = document.querySelector('input[name="status"]:checked').value;
+                const existingDisbursement = id ? disbursements.find(d => d.id === id) : null;
+
+                let finalAttachmentData = null;
+                let finalAttachmentName = null;
+
+                const file = attachmentInput.files[0];
+
+                if (selectedStatus === 'เสร็จสิ้น') {
+                    if (file) {
+                        // New file uploaded, validate and process it
+                        if (file.type !== 'application/pdf') {
+                            alert('กรุณาเลือกไฟล์ PDF เท่านั้น');
+                            return;
+                        }
+                        if (file.size > 5 * 1024 * 1024) { // 5 MB
+                            alert('ขนาดไฟล์ต้องไม่เกิน 5 MB');
+                            return;
+                        }
+                        finalAttachmentData = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = event => resolve(event.target.result);
+                            reader.onerror = error => reject(error);
+                            reader.readAsDataURL(file);
+                        });
+                        finalAttachmentName = file.name;
+                    } else if (existingDisbursement) {
+                        // No new file, but we are editing, so keep the old one
+                        finalAttachmentData = existingDisbursement.attachment;
+                        finalAttachmentName = existingDisbursement.attachmentName;
+                    }
+                }
+                // If status is not 'เสร็จสิ้น', finalAttachmentData and finalAttachmentName remain null, correctly clearing them.
+
+                const disbursementData = {
+                    id: id || Date.now().toString(),
+                    date: document.getElementById('date').value,
+                    description: document.getElementById('description').value,
+                    price: document.getElementById('price').value,
+                    tax: document.getElementById('tax').value,
+                    totalPrice: document.getElementById('total-price').value,
+                    wht: document.getElementById('wht').value,
+                    netTotal: document.getElementById('net-total').value,
+                    payee: document.getElementById('payee').value,
+                    paymentMethod: document.getElementById('payment-method').value,
+                    status: selectedStatus,
+                    attachment: finalAttachmentData,
+                    attachmentName: finalAttachmentName
+                };
+
+                if (id) {
+                    const index = disbursements.findIndex(d => d.id === id);
+                    if (index !== -1) {
+                        disbursements[index] = disbursementData;
+                    }
+                } else {
+                    disbursements.push(disbursementData);
+                }
+
+                localStorage.setItem('disbursements', JSON.stringify(disbursements));
+                resetForm();
+                renderTable();
+                populatePayeeFilter();
+            });
+
+            tableBody.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-btn');
+                if (editBtn) {
+                    const id = editBtn.dataset.id;
+                    const disbursement = disbursements.find(d => d.id === id);
+                    if (!disbursement) return;
+
+                    document.getElementById('disbursement-id').value = disbursement.id;
+                    document.getElementById('date').value = disbursement.date;
+                    document.getElementById('description').value = disbursement.description;
+                    document.getElementById('price').value = disbursement.price;
+                    document.getElementById('tax').value = disbursement.tax;
+                    document.getElementById('wht').value = disbursement.wht;
+                    calculateAmounts();
+                    document.getElementById('payee').value = disbursement.payee;
+                    document.getElementById('payment-method').value = disbursement.paymentMethod;
+                    document.querySelector(`input[name="status"][value="${disbursement.status}"]`).checked = true;
+                    
+                    handleStatusChange();
+                    attachmentNameDisplay.textContent = disbursement.attachmentName ? `ไฟล์ปัจจุบัน: ${disbursement.attachmentName}` : '';
+                    attachmentInput.value = ''; // Clear file input
+
+                    formTitle.textContent = 'แก้ไขรายการ';
+                    submitBtn.textContent = 'อัปเดต';
+                    cancelBtn.style.display = 'inline-flex';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) {
+                    const id = deleteBtn.dataset.id;
+                    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?')) {
+                        disbursements = disbursements.filter(d => d.id !== id);
+                        localStorage.setItem('disbursements', JSON.stringify(disbursements));
+                        renderTable();
+                        populatePayeeFilter();
+                    }
+                }
+            });
+            
+
+
+            cancelBtn.addEventListener('click', resetForm);
+
+            statusFilter.addEventListener('change', renderTable);
+
+            summaryTypeFilter.addEventListener('change', () => {
+                dailyFilterContainer.classList.add('hidden');
+                monthlyFilterContainer.classList.add('hidden');
+                payeeFilterContainer.classList.add('hidden');
+                switch (summaryTypeFilter.value) {
+                    case 'daily': dailyFilterContainer.classList.remove('hidden'); break;
+                    case 'monthly': monthlyFilterContainer.classList.remove('hidden'); break;
+                    case 'payee': payeeFilterContainer.classList.remove('hidden'); break;
+                }
+                updateSummary();
+            });
+
+            [summaryDate, summaryMonth, summaryPayee].forEach(el => el.addEventListener('change', updateSummary));
+
+            const exportToCsv = (filename, rows) => {
+                const header = ["วันที่", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
+                const csvContent = [header.join(','), ...rows.map(row => 
+                    [
+                        `"${row.date}"`,
+                        `"${row.description}"`,
+                        row.price,
+                        row.tax,
+                        row.totalPrice,
+                        row.wht,
+                        row.netTotal,
+                        `"${row.payee}"`,
+                        `"${row.paymentMethod}"`,
+                        `"${row.status}"`
+                    ].join(',')
+                )].join('\n');
+
+                const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                if (link.download !== undefined) { 
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", filename);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            };
+
+            exportBtnHeader.addEventListener('click', () => {
+                const mainFilterValue = statusFilter.value;
+                let dataToExport = disbursements.filter(d => mainFilterValue === 'all' || d.status === mainFilterValue);
+                exportToCsv('disbursements.csv', dataToExport);
+            });
+
+            renderTable();
+            populatePayeeFilter();
+
+
+            // Settings Modal Logic
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeSettingsBtn = document.getElementById('close-settings-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const changePasswordForm = document.getElementById('change-password-form');
+            const addUserForm = document.getElementById('add-user-form');
+
+            settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+            closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+
+            logoutBtn.addEventListener('click', () => {
+                sessionStorage.clear();
+                showLogin();
+            });
+
+            changePasswordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const currentUser = sessionStorage.getItem('currentUser');
+                const currentPassword = document.getElementById('current-password').value;
+                const newPassword = document.getElementById('new-password').value;
+                const feedbackEl = document.getElementById('password-change-feedback');
+
+                let users = JSON.parse(localStorage.getItem('users')) || [];
+                const userIndex = users.findIndex(u => u.username === currentUser);
+
+                if (userIndex === -1 || users[userIndex].password !== currentPassword) {
+                    feedbackEl.textContent = 'รหัสผ่านปัจจุบันไม่ถูกต้อง';
+                    feedbackEl.className = 'text-red-500 text-sm text-center mt-2';
+                    return;
+                }
+
+                users[userIndex].password = newPassword;
+                localStorage.setItem('users', JSON.stringify(users));
+                feedbackEl.textContent = 'เปลี่ยนรหัสผ่านสำเร็จแล้ว';
+                feedbackEl.className = 'text-green-600 text-sm text-center mt-2';
+                changePasswordForm.reset();
+            });
+
+            addUserForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newUsername = document.getElementById('new-username').value;
+                const newUserPassword = document.getElementById('new-user-password').value;
+                const feedbackEl = document.getElementById('add-user-feedback');
+
+                let users = JSON.parse(localStorage.getItem('users')) || [];
+                if (users.some(u => u.username === newUsername)) {
+                    feedbackEl.textContent = 'ชื่อผู้ใช้นี้มีอยู่แล้ว';
+                    feedbackEl.className = 'text-red-500 text-sm text-center mt-2';
+                    return;
+                }
+
+                users.push({ username: newUsername, password: newUserPassword });
+                localStorage.setItem('users', JSON.stringify(users));
+                feedbackEl.textContent = 'เพิ่มผู้ใช้งานสำเร็จแล้ว';
+                feedbackEl.className = 'text-green-600 text-sm text-center mt-2';
+                addUserForm.reset();
+            });
+            // Password Toggle Logic
+            const togglePasswordBtn = document.getElementById('toggle-password-btn');
+            const eyeIcon = document.getElementById('eye-icon');
+            const eyeOffIcon = document.getElementById('eye-off-icon');
+
+            togglePasswordBtn.addEventListener('click', () => {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcon.classList.add('hidden');
+                    eyeOffIcon.classList.remove('hidden');
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcon.classList.remove('hidden');
+                    eyeOffIcon.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+
+</body>
+</div>
+
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-lg w-full max-w-md text-black">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold">ตั้งค่า</h3>
+                <button id="close-settings-btn" class="p-1 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="space-y-6">
+                    <!-- Change Password Form -->
+                    <form id="change-password-form">
+                        <h4 class="font-semibold mb-2">เปลี่ยนรหัสผ่าน</h4>
+                        <div class="space-y-4">
+                             <div>
+                                <label for="current-password" class="block text-sm font-medium text-gray-700">รหัสผ่านปัจจุบัน</label>
+                                <input type="password" id="current-password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="new-password" class="block text-sm font-medium text-gray-700">รหัสผ่านใหม่</label>
+                                <input type="password" id="new-password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            </div>
+                            <button type="submit" class="w-full justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">บันทึกรหัสผ่านใหม่</button>
+                            <p id="password-change-feedback" class="text-sm text-center mt-2"></p>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <!-- Add User Form -->
+                    <form id="add-user-form">
+                        <h4 class="font-semibold mb-2">เพิ่มผู้ใช้งานใหม่</h4>
+                        <div class="space-y-4">
+                             <div>
+                                <label for="new-username" class="block text-sm font-medium text-gray-700">ชื่อผู้ใช้ใหม่</label>
+                                <input type="text" id="new-username" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="new-user-password" class="block text-sm font-medium text-gray-700">รหัสผ่านใหม่</label>
+                                <input type="password" id="new-user-password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            </div>
+                            <button type="submit" class="w-full justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">เพิ่มผู้ใช้งาน</button>
+                            <p id="add-user-feedback" class="text-sm text-center mt-2"></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 rounded-b-2xl flex justify-end">
+                 <button id="logout-btn" class="py-2 px-4 border rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">ออกจากระบบ</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
