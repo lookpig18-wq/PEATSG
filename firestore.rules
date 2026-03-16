@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: accounts
+    // Document ID: {code}
+    // Fields:
+    //   - code: string (required)
+    //   - name: string (required)
+    //   - budgets: map (required) - cost center to budget amount
+    //
+    // Collection: disbursements
+    // Document ID: {id}
+    // Fields:
+    //   - id: string (required)
+    //   - accountCode: string
+    //   - accountName: string
+    //   - costCenter: string
+    //   - date: string (required)
+    //   - description: string (required)
+    //   - price: string (required)
+    //   - tax: string
+    //   - totalPrice: string
+    //   - wht: string
+    //   - netTotal: string
+    //   - payee: string (required)
+    //   - paymentMethod: string
+    //   - status: string (required)
+    //   - attachment: string
+    //   - attachmentName: string
+    //
+    // Collection: users
+    // Document ID: {username}
+    // Fields:
+    //   - password: string (required)
+    //   - role: string (optional, defaults to 'guest')
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (request.auth.token.email == "Lookpig18@gmail.com" && request.auth.token.email_verified == true)
+        );
+    }
+
+    function isGuest() {
+      return isAuthenticated();
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidAccount(data) {
+      return data.code is string && data.code.size() > 0 && data.code.size() < 50 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.budgets is map;
+    }
+
+    function isValidDisbursement(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.date is string &&
+             data.description is string && data.description.size() < 1000 &&
+             data.price is string &&
+             data.payee is string && data.payee.size() < 200 &&
+             data.status is string;
+    }
+
+    function isValidUser(data) {
+      return data.password is string && data.password.size() > 0 && data.password.size() < 100 &&
+             (!('role' in data) || (data.role in ['admin', 'guest']));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /accounts/{code} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidAccount(request.resource.data);
+    }
+
+    match /disbursements/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidDisbursement(request.resource.data);
+      allow update: if isAuthenticated() && isValidDisbursement(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{username} {
+      // Users collection contains passwords, so it's sensitive.
+      // Only admins can read/write all users.
+      // A user can read their own document if the username matches their UID.
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == username);
+      allow write: if isAdmin() && isValidUser(request.resource.data);
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
