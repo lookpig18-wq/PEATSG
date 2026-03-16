@@ -1,6 +1,7 @@
 import { 
   auth, db, googleProvider, signInWithPopup, onAuthStateChanged, signOut,
-  collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy 
+  collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy,
+  getDocFromServer
 } from './firebase';
 import { Account, Disbursement, User } from './types';
 
@@ -56,77 +57,124 @@ const budgetUsageText = document.getElementById('budget-usage-text') as HTMLElem
 let accountData: Account[] = [];
 let disbursements: Disbursement[] = [];
 let currentUser: User | null = null;
+let accountsUnsubscribe: (() => void) | null = null;
+let disbursementsUnsubscribe: (() => void) | null = null;
 
-const defaultAccountData: Account[] = [
-    { code: "52010030", name: "ค่าล่วงเวลาพนักงาน", budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 480000, "ผบค.": 370000 } },
-    { code: "52010100", name: "ค่าล่วงเวลา - ลูกจ้าง", budgets: { "ผบง.": 26000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "52010990", name: "ค่าตอบแทนอื่น-พนักงาน", budgets: { "ผบง.": 7000, "กบห.": 8500, "ผปร.": 7000, "ผบค.": 7000 } },
-    { code: "52012020", name: "เงินเพิ่มฮอทไลน์", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 62000, "ผบค.": 0 } },
-    { code: "52012070", name: "ค่าโทรศัพท์เคลื่อนที่-ผู้บริหาร", budgets: { "ผบง.": 0, "กบห.": 12000, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "52020030", name: "เงินช่วยเหลือค่าเล่าเรียนบุตร", budgets: { "ผบง.": 6000, "กบห.": 0, "ผปร.": 0, "ผบค.": 26000 } },
-    { code: "52020990", name: "เงินช่วยเหลืออื่น", budgets: { "ผบง.": 4500, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "52022010", name: "ค่าพาหนะเดินทางไปปฏิบัติงานต่างท้องที่-พนักงาน", budgets: { "ผบง.": 500, "กบห.": 500, "ผปร.": 500, "ผบค.": 500 } },
-    { code: "52022020", name: "ค่าเบี้ยเลี้ยง-พนักงาน", budgets: { "ผบง.": 20000, "กบห.": 23000, "ผปร.": 22000, "ผบค.": 22000 } },
-    { code: "52022030", name: "ค่าที่พัก-พนักงาน", budgets: { "ผบง.": 35000, "กบห.": 39000, "ผปร.": 35000, "ผบค.": 35000 } },
-    { code: "52022050", name: "ค่าชดเชยการใช้ยานพาหนะส่วนตัว", budgets: { "ผบง.": 37000, "กบห.": 10000, "ผปร.": 37000, "ผบค.": 37000 } },
-    { code: "52029010", name: "ค่าเช่าบ้าน", budgets: { "ผบง.": 72000, "กบห.": 72000, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53010020", name: "ค่าตอบแทน-การจดหน่วยและแจ้งหนี้กระแสไฟฟ้า", budgets: { "ผบง.": 1740000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53010070", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันงานบำรุงรักษา", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 1250000, "ผบค.": 0 } },
-    { code: "53010080", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันงานบริการ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 660000 } },
-    { code: "53010090", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันทั่วไป", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 370000, "ผบค.": 0 } },
-    { code: "53019990", name: "ค่าตอบแทนอื่น ๆ", budgets: { "ผบง.": 5000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53021010", name: "ค่าป้ายประชาสัมพันธ์", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 4500 } },
-    { code: "53021020", name: "ค่าประชาสัมพันธ์อื่น", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 15000 } },
-    { code: "53021030", name: "ค่าประชาสัมพันธ์ทางสื่อ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 1000 } },
-    { code: "53030010", name: "ค่าวัสดุสำนักงาน", budgets: { "ผบง.": 65000, "กบห.": 0, "ผปร.": 65000, "ผบค.": 65000 } },
-    { code: "53030030", name: "ค่าวัสดุเบ็ดเตล็ด", budgets: { "ผบง.": 38000, "กบห.": 0, "ผปร.": 7000, "ผบค.": 7000 } },
-    { code: "53031010", name: "ค่าน้ำดื่ม", budgets: { "ผบง.": 5600, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53031020", name: "ค่าน้ำประปา", budgets: { "ผบง.": 27000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53032010", name: "ค่าใช้บริการโทรศัพท์", budgets: { "ผบง.": 20000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53032020", name: "ค่าบำรุงรักษาคู่สายโทรศัพท์", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53032060", name: "ค่าไปรษณีย์โทรเลข", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53032080", name: "ค่าใช้จ่ายในการใช้อินเตอร์เน็ต", budgets: { "ผบง.": 8400, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53034010", name: "ค่าจ้างเหมาทำความสะอาด", budgets: { "ผบง.": 220000, "กบห.": 0, "ผปร.": 26400, "ผบค.": 0 } },
-    { code: "53034030", name: "ค่าจ้างบำรุงรักษาสวน", budgets: { "ผบง.": 72000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53034040", name: "ค่าบำรุงรักษาบริเวณสำนักงาน", budgets: { "ผบง.": 38000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53039010", name: "เชื้อเพลิงยานพาหนะ", budgets: { "ผบง.": 92000, "กบห.": 97000, "ผปร.": 460000, "ผบค.": 155000 } },
-    { code: "53039990", name: "ค่าใช้จ่ายเบ็ดเตล็ด", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53051040", name: "ค่าซ่อมแซมบำรุงรักษา-อาคาร", budgets: { "ผบง.": 175000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53051050", name: "ค่าซ่อมแซมบำรุงรักษา-ยานพาหนะ", budgets: { "ผบง.": 10000, "กบห.": 0, "ผปร.": 140000, "ผบค.": 30000 } },
-    { code: "53051060", name: "ค่าซ่อมแซมบำรุงรักษา-คอมฯ&อุปกรณ์ประกอบคอมฯ", budgets: { "ผบง.": 30000, "กบห.": 0, "ผปร.": 30000, "ผบค.": 30000 } },
-    { code: "53051090", name: "ค่าวัสดุเบ็ดเตล็ด ด้านช่าง", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 15000, "ผบค.": 15000 } },
-    { code: "53051100", name: "ค่าซ่อมแซมบำรุงรักษาอุปกรณ์ในสำนักงาน", budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 20000, "ผบค.": 20000 } },
-    { code: "53051990", name: "ค่าซ่อมแซมบำรุงรักษาอื่น ๆ", budgets: { "ผบง.": 10000, "กบห.": 0, "ผปร.": 10000, "ผบค.": 10000 } },
-    { code: "53062020", name: "ค่าเบี้ยประกัน-ยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 20000, "ผบค.": 0 } },
-    { code: "53064010", name: "ค่าภาษีที่ดินฯ", budgets: { "ผบง.": 30000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53064020", name: "ค่าภาษีและค่าธรรมเนียมยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 30000, "ผบค.": 0 } },
-    { code: "53069020", name: "ค่าขนส่งขนย้าย", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 1000, "ผบค.": 0 } },
-    { code: "53069070", name: "ค่าธรรมเนียมธนาคาร", budgets: { "ผบง.": 9000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-    { code: "53069110", name: "ค่าตรวจสภาพยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 2500, "ผบค.": 0 } },
-    { code: "53069990", name: "ค่าใช้จ่ายอื่น", budgets: { "ผบง.": 80000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } }
-];
+// Error Handling
+enum OperationType {
+    CREATE = 'create',
+    UPDATE = 'update',
+    DELETE = 'delete',
+    LIST = 'list',
+    GET = 'get',
+    WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+    error: string;
+    operationType: OperationType;
+    path: string | null;
+    authInfo: {
+        userId: string | undefined;
+        email: string | null | undefined;
+        emailVerified: boolean | undefined;
+        isAnonymous: boolean | undefined;
+        tenantId: string | null | undefined;
+        providerInfo: {
+            providerId: string;
+            displayName: string | null;
+            email: string | null;
+            photoUrl: string | null;
+        }[];
+    }
+}
+
+const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
+    const errInfo: FirestoreErrorInfo = {
+        error: error instanceof Error ? error.message : String(error),
+        authInfo: {
+            userId: auth.currentUser?.uid,
+            email: auth.currentUser?.email,
+            emailVerified: auth.currentUser?.emailVerified,
+            isAnonymous: auth.currentUser?.isAnonymous,
+            tenantId: auth.currentUser?.tenantId,
+            providerInfo: auth.currentUser?.providerData.map(provider => ({
+                providerId: provider.providerId,
+                displayName: provider.displayName,
+                email: provider.email,
+                photoUrl: provider.photoURL
+            })) || []
+        },
+        operationType,
+        path
+    };
+    console.error('Firestore Error: ', JSON.stringify(errInfo));
+    
+    // Show user friendly message
+    if (errInfo.error.includes('insufficient permissions')) {
+        alert('คุณไม่มีสิทธิ์ในการดำเนินการนี้ กรุณาตรวจสอบการเข้าสู่ระบบของคุณ (แนะนำให้ใช้การเข้าสู่ระบบด้วย Google สำหรับแอดมินหลัก)');
+    } else if (errInfo.error.includes('quota exceeded')) {
+        alert('โควตาการใช้งานฐานข้อมูลเต็มแล้ว กรุณาลองใหม่ในวันพรุ่งนี้');
+    } else {
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล: ' + errInfo.error);
+    }
+    
+    throw new Error(JSON.stringify(errInfo));
+};
+
+// Connection Test
+async function testConnection() {
+    try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+    } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+            console.error("Please check your Firebase configuration.");
+            alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบการตั้งค่า Firebase");
+        }
+    }
+}
+testConnection();
 
 // Firebase Sync
 const syncData = () => {
+    console.log('Starting data sync...');
+    
+    // Unsubscribe from previous listeners if they exist
+    if (accountsUnsubscribe) {
+        console.log('Unsubscribing from previous accounts listener');
+        accountsUnsubscribe();
+    }
+    if (disbursementsUnsubscribe) {
+        console.log('Unsubscribing from previous disbursements listener');
+        disbursementsUnsubscribe();
+    }
+
     // Sync Accounts
-    onSnapshot(collection(db, 'accounts'), (snapshot) => {
-        accountData = snapshot.docs.map(doc => doc.data() as Account);
-        if (accountData.length === 0) {
-            // Seed default data if empty
-            defaultAccountData.forEach(async (acc) => {
-                await setDoc(doc(db, 'accounts', acc.code), acc);
-            });
-        }
+    accountsUnsubscribe = onSnapshot(collection(db, 'accounts'), (snapshot) => {
+        console.log('Accounts snapshot received, count:', snapshot.size);
+        accountData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Ensure code is present even if not in document body (though it should be)
+            return { ...data, code: data.code || doc.id } as Account;
+        });
+        console.log('Mapped accountData:', accountData);
         populateAccountDatalist();
         renderMgmtAccountList();
+    }, (error) => {
+        console.error('Accounts sync error:', error);
+        handleFirestoreError(error, OperationType.GET, 'accounts');
     });
 
     // Sync Disbursements
-    onSnapshot(query(collection(db, 'disbursements'), orderBy('date', 'desc')), (snapshot) => {
+    disbursementsUnsubscribe = onSnapshot(query(collection(db, 'disbursements'), orderBy('date', 'desc')), (snapshot) => {
+        console.log('Disbursements snapshot received, count:', snapshot.size);
         disbursements = snapshot.docs.map(doc => doc.data() as Disbursement);
         renderTable();
         populatePayeeFilter();
         updateSummary();
+    }, (error) => {
+        console.error('Disbursements sync error:', error);
+        handleFirestoreError(error, OperationType.GET, 'disbursements');
     });
 };
 
@@ -137,6 +185,7 @@ onAuthStateChanged(auth, (user) => {
         sessionStorage.setItem('isLoggedIn', 'true');
         sessionStorage.setItem('userRole', 'admin');
         sessionStorage.setItem('currentUser', user.uid);
+        sessionStorage.setItem('userEmail', user.email || '');
         showApp();
         syncData();
     } else {
@@ -175,6 +224,7 @@ const showLogin = () => {
 const applyPermissions = () => {
     const role = sessionStorage.getItem('userRole');
     const userId = sessionStorage.getItem('currentUser');
+    const userEmail = sessionStorage.getItem('userEmail');
     const adminElements = document.querySelectorAll('.admin-only');
     const superAdminElements = document.querySelectorAll('.super-admin-only');
     const mainGrid = document.getElementById('main-grid') as HTMLElement;
@@ -188,7 +238,7 @@ const applyPermissions = () => {
         tableColumn.classList.remove('lg:col-span-2');
     } else {
         adminElements.forEach(el => el.classList.remove('hidden'));
-        if (userId === '9012844' || userId === 'Lookpig18@gmail.com') { // Added user email as super admin for testing
+        if (userId === '9012844' || (userEmail && userEmail.toLowerCase() === 'lookpig18@gmail.com')) { 
             superAdminElements.forEach(el => el.classList.remove('hidden'));
         } else {
             superAdminElements.forEach(el => el.classList.add('hidden'));
@@ -235,7 +285,8 @@ const updateBudgetInfo = () => {
         budgetUsageText.textContent = `ใช้ไป ${usagePercent.toFixed(1)}%`;
         
         const userId = sessionStorage.getItem('currentUser');
-        if ((userId === '9012844' || userId === 'Lookpig18@gmail.com') && budgetInfo) {
+        const userEmail = sessionStorage.getItem('userEmail');
+        if ((userId === '9012844' || (userEmail && userEmail.toLowerCase() === 'lookpig18@gmail.com')) && budgetInfo) {
             budgetInfo.classList.remove('hidden');
         }
     } else {
@@ -354,7 +405,8 @@ const updateSummary = () => {
     
     if ((summaryType === 'monthly' || summaryType === 'yearly') && selectedPeriod) {
         const userId = sessionStorage.getItem('currentUser');
-        if (userId === '9012844' || userId === 'Lookpig18@gmail.com') {
+        const userEmail = sessionStorage.getItem('userEmail');
+        if (userId === '9012844' || (userEmail && userEmail.toLowerCase() === 'lookpig18@gmail.com')) { 
             budgetSummaryContainer.classList.remove('hidden');
         } else {
             budgetSummaryContainer.classList.add('hidden');
@@ -577,8 +629,12 @@ form.addEventListener('submit', async (e) => {
         attachmentName: finalAttachmentName
     };
 
-    await setDoc(doc(db, 'disbursements', id), data);
-    resetForm();
+    try {
+        await setDoc(doc(db, 'disbursements', id), data);
+        resetForm();
+    } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `disbursements/${id}`);
+    }
 });
 
 tableBody.addEventListener('click', async (e) => {
@@ -614,7 +670,11 @@ tableBody.addEventListener('click', async (e) => {
     if (deleteBtn) {
         const id = deleteBtn.dataset.id;
         if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?')) {
-            await deleteDoc(doc(db, 'disbursements', id!));
+            try {
+                await deleteDoc(doc(db, 'disbursements', id!));
+            } catch (error) {
+                handleFirestoreError(error, OperationType.DELETE, `disbursements/${id}`);
+            }
         }
     }
 });
@@ -647,10 +707,28 @@ const addUserForm = document.getElementById('add-user-form') as HTMLFormElement;
 settingsBtn.addEventListener('click', () => {
     applyPermissions();
     const userId = sessionStorage.getItem('currentUser');
-    if (userId === '9012844' || userId === 'Lookpig18@gmail.com') {
+    const userEmail = sessionStorage.getItem('userEmail');
+    if (userId === '9012844' || (userEmail && userEmail.toLowerCase() === 'lookpig18@gmail.com')) {
         renderSuperAdminUserList();
+        renderMgmtAccountList();
     }
     settingsModal.classList.remove('hidden');
+});
+
+const manageAccountsQuickBtn = document.getElementById('manage-accounts-quick-btn') as HTMLElement;
+manageAccountsQuickBtn.addEventListener('click', () => {
+    applyPermissions();
+    const userId = sessionStorage.getItem('currentUser');
+    const userEmail = sessionStorage.getItem('userEmail');
+    if (userId === '9012844' || (userEmail && userEmail.toLowerCase() === 'lookpig18@gmail.com')) {
+        renderSuperAdminUserList();
+        renderMgmtAccountList();
+    }
+    settingsModal.classList.remove('hidden');
+    // Scroll to account management section
+    setTimeout(() => {
+        document.getElementById('account-mgmt-section')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
 });
 
 const renderSuperAdminUserList = async () => {
@@ -680,12 +758,20 @@ document.getElementById('super-admin-user-list')?.addEventListener('click', asyn
 
     if (target.classList.contains('super-admin-save-btn')) {
         const passwordInput = document.querySelector(`.super-admin-password-input[data-username="${username}"]`) as HTMLInputElement;
-        await updateDoc(doc(db, 'users', username), { password: passwordInput.value });
-        alert('บันทึกรหัสผ่านใหม่สำเร็จ');
+        try {
+            await updateDoc(doc(db, 'users', username), { password: passwordInput.value });
+            alert('บันทึกรหัสผ่านใหม่สำเร็จ');
+        } catch (error) {
+            handleFirestoreError(error, OperationType.UPDATE, `users/${username}`);
+        }
     } else if (target.classList.contains('super-admin-delete-btn')) {
         if (confirm(`ยืนยันการลบผู้ใช้ ${username}?`)) {
-            await deleteDoc(doc(db, 'users', username));
-            renderSuperAdminUserList();
+            try {
+                await deleteDoc(doc(db, 'users', username));
+                renderSuperAdminUserList();
+            } catch (error) {
+                handleFirestoreError(error, OperationType.DELETE, `users/${username}`);
+            }
         }
     }
 });
@@ -712,10 +798,14 @@ changePasswordForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    await updateDoc(doc(db, 'users', currentUser), { password: newPassword });
-    feedbackEl.textContent = 'เปลี่ยนรหัสผ่านสำเร็จแล้ว';
-    feedbackEl.className = 'text-green-600 text-sm text-center mt-2';
-    changePasswordForm.reset();
+    try {
+        await updateDoc(doc(db, 'users', currentUser), { password: newPassword });
+        feedbackEl.textContent = 'เปลี่ยนรหัสผ่านสำเร็จแล้ว';
+        feedbackEl.className = 'text-green-600 text-sm text-center mt-2';
+        changePasswordForm.reset();
+    } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${currentUser}`);
+    }
 });
 
 addUserForm.addEventListener('submit', async (e) => {
@@ -731,11 +821,15 @@ addUserForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    await setDoc(doc(db, 'users', newUsername), { password: newUserPassword, role: 'admin' });
-    feedbackEl.textContent = 'เพิ่มผู้ใช้งานสำเร็จแล้ว';
-    feedbackEl.className = 'text-green-600 text-sm text-center mt-2';
-    addUserForm.reset();
-    renderSuperAdminUserList();
+    try {
+        await setDoc(doc(db, 'users', newUsername), { password: newUserPassword, role: 'admin' });
+        feedbackEl.textContent = 'เพิ่มผู้ใช้งานสำเร็จแล้ว';
+        feedbackEl.className = 'text-green-600 text-sm text-center mt-2';
+        addUserForm.reset();
+        renderSuperAdminUserList();
+    } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `users/${newUsername}`);
+    }
 });
 
 // Account Management
@@ -752,14 +846,22 @@ const mgmtAccountCancel = document.getElementById('mgmt-account-cancel') as HTML
 const mgmtAccountList = document.getElementById('mgmt-account-list') as HTMLElement;
 
 const renderMgmtAccountList = () => {
+    console.log('Rendering Mgmt Account List, data length:', accountData.length);
     mgmtAccountList.innerHTML = '';
+    
+    if (accountData.length === 0) {
+        mgmtAccountList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500 italic">ยังไม่มีข้อมูลรหัสบัญชี</td></tr>';
+        return;
+    }
+
     accountData.forEach((acc, index) => {
-        const totalBudget = Object.values(acc.budgets).reduce((sum, b) => sum + b, 0);
+        const budgets = acc.budgets || {};
+        const totalBudget = Object.values(budgets).reduce((sum, b) => sum + (typeof b === 'number' ? b : 0), 0);
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="px-4 py-2 font-medium">${acc.code}</td>
-            <td class="px-4 py-2 truncate max-w-[150px]">${acc.name}</td>
-            <td class="px-4 py-2 text-right">${totalBudget.toLocaleString()}</td>
+            <td class="px-4 py-2 font-medium">${acc.code || '-'}</td>
+            <td class="px-4 py-2 truncate max-w-[150px]">${acc.name || '-'}</td>
+            <td class="px-4 py-2 text-right">${totalBudget.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             <td class="px-4 py-2 text-center space-x-2">
                 <button class="edit-acc-btn text-indigo-600 hover:text-indigo-900" data-index="${index}">แก้ไข</button>
                 <button class="delete-acc-btn text-red-600 hover:text-red-900" data-index="${index}">ลบ</button>
@@ -788,8 +890,13 @@ accountMgmtForm.addEventListener('submit', async (e) => {
             "ผบค.": parseFloat(mgmtBudgetผบค.value) || 0
         }
     };
-    await setDoc(doc(db, 'accounts', newAccount.code), newAccount);
-    resetMgmtForm();
+    try {
+        await setDoc(doc(db, 'accounts', newAccount.code), newAccount);
+        alert('บันทึกรหัสบัญชีสำเร็จ');
+        resetMgmtForm();
+    } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `accounts/${newAccount.code}`);
+    }
 });
 
 mgmtAccountList.addEventListener('click', async (e) => {
@@ -811,7 +918,11 @@ mgmtAccountList.addEventListener('click', async (e) => {
         accountMgmtForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } else if (target.classList.contains('delete-acc-btn')) {
         if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรหัสบัญชีนี้?')) {
-            await deleteDoc(doc(db, 'accounts', acc.code));
+            try {
+                await deleteDoc(doc(db, 'accounts', acc.code));
+            } catch (error) {
+                handleFirestoreError(error, OperationType.DELETE, `accounts/${acc.code}`);
+            }
         }
     }
 });
