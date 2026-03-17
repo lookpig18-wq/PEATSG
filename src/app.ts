@@ -62,7 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const netTotalInput = document.getElementById('net-total') as HTMLInputElement;
     const submitBtn = document.getElementById('submit-btn')!;
     const cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
-    const exportBtnHeader = document.getElementById('export-btn-header')!;
+    const exportRecordedDataBtn = document.getElementById('export-recorded-data-btn')!;
+    const exportDisbursementSummaryBtn = document.getElementById('export-disbursement-summary-btn')!;
+    const exportBudgetSummaryBtn = document.getElementById('export-budget-summary-btn')!;
     const summaryTypeFilter = document.getElementById('summary-type-filter') as HTMLSelectElement;
     const dailyFilterContainer = document.getElementById('daily-filter-container')!;
     const summaryDate = document.getElementById('summary-date') as HTMLInputElement;
@@ -758,24 +760,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     [summaryDate, summaryMonth, summaryYear, summaryPayee, summaryDeptFilter].forEach(el => el.addEventListener('change', updateSummary));
 
-    const exportToCsv = (filename: string, rows: Disbursement[]) => {
-        const header = ["วันที่", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
+    const exportToCsv = (filename: string, header: string[], rows: any[][]) => {
         const csvContent = [header.join(','), ...rows.map(row => 
-            [
-                `"${row.date}"`,
-                `"${row.accountCode || ''}"`,
-                `"${row.accountName || ''}"`,
-                `"${row.costCenter || ''}"`,
-                `"${row.description}"`,
-                row.price,
-                row.tax,
-                row.totalPrice,
-                row.wht,
-                row.netTotal,
-                `"${row.payee}"`,
-                `"${row.paymentMethod}"`,
-                `"${row.status}"`
-            ].join(',')
+            row.map(cell => `"${(cell === null || cell === undefined) ? '' : cell.toString().replace(/"/g, '""')}"`).join(',')
         )].join('\n');
 
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -791,10 +778,168 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    exportBtnHeader.addEventListener('click', () => {
+    exportRecordedDataBtn.addEventListener('click', () => {
         const mainFilterValue = statusFilter.value;
-        let dataToExport = disbursements.filter(d => mainFilterValue === 'all' || d.status === mainFilterValue);
-        exportToCsv('disbursements.csv', dataToExport);
+        const dataToExport = disbursements.filter(d => mainFilterValue === 'all' || d.status === mainFilterValue);
+        
+        const header = ["วันที่", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
+        const rows = dataToExport.map(row => [
+            row.date,
+            row.accountCode || '',
+            row.accountName || '',
+            row.costCenter || '',
+            row.description,
+            row.price,
+            row.tax,
+            row.totalPrice,
+            row.wht,
+            row.netTotal,
+            row.payee,
+            row.paymentMethod,
+            row.status
+        ]);
+        
+        exportToCsv('recorded_data.csv', header, rows);
+    });
+
+    exportDisbursementSummaryBtn.addEventListener('click', () => {
+        const mainFilterValue = statusFilter.value;
+        const deptFilterValue = summaryDeptFilter.value;
+
+        let filteredForSummary = disbursements.filter(d => {
+            const statusMatch = mainFilterValue === 'all' || d.status === mainFilterValue;
+            const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
+            return statusMatch && deptMatch;
+        });
+
+        const summaryType = summaryTypeFilter.value;
+        let summaryData = [];
+        let periodLabel = '';
+
+        switch (summaryType) {
+            case 'daily':
+                if (summaryDate.value) {
+                    periodLabel = summaryDate.value;
+                    summaryData = filteredForSummary.filter(d => d.date === summaryDate.value);
+                }
+                break;
+            case 'monthly':
+                if (summaryMonth.value) {
+                    periodLabel = summaryMonth.value;
+                    summaryData = filteredForSummary.filter(d => d.date.startsWith(periodLabel));
+                }
+                break;
+            case 'yearly':
+                if (summaryYear.value) {
+                    periodLabel = summaryYear.value;
+                    summaryData = filteredForSummary.filter(d => d.date.startsWith(periodLabel));
+                }
+                break;
+            case 'payee':
+                if (summaryPayee.value) {
+                    periodLabel = summaryPayee.value;
+                    summaryData = filteredForSummary.filter(d => d.payee === summaryPayee.value);
+                }
+                break;
+            default:
+                periodLabel = 'ทั้งหมด';
+                summaryData = [...filteredForSummary];
+                break;
+        }
+
+        const header = ["วันที่", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
+        const rows = summaryData.map(row => [
+            row.date,
+            row.accountCode || '',
+            row.accountName || '',
+            row.costCenter || '',
+            row.description,
+            row.price,
+            row.tax,
+            row.totalPrice,
+            row.wht,
+            row.netTotal,
+            row.payee,
+            row.paymentMethod,
+            row.status
+        ]);
+
+        exportToCsv(`disbursement_summary_${periodLabel}.csv`, header, rows);
+    });
+
+    exportBudgetSummaryBtn.addEventListener('click', () => {
+        const summaryType = summaryTypeFilter.value;
+        const deptFilterValue = summaryDeptFilter.value;
+        let selectedPeriod = '';
+        
+        if (summaryType === 'monthly') selectedPeriod = summaryMonth.value;
+        else if (summaryType === 'yearly') selectedPeriod = summaryYear.value;
+
+        if (!selectedPeriod) {
+            alert('กรุณาเลือกเดือนหรือปีเพื่อดาวน์โหลดสรุปงบประมาณ');
+            return;
+        }
+
+        const isYearly = summaryType === 'yearly';
+        const filteredForSummary = disbursements.filter(d => {
+            const statusMatch = statusFilter.value === 'all' || d.status === statusFilter.value;
+            const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
+            const periodMatch = d.date.startsWith(selectedPeriod);
+            return statusMatch && deptMatch && periodMatch;
+        });
+
+        const allRelevantCodes = [...new Set(filteredForSummary.map(d => d.accountCode))].filter(c => c);
+        
+        const header = ["รหัสบัญชี", "ชื่อบัญชี", "งบประมาณรวม/ปี", isYearly ? "งบประมาณ/ปี" : "งบประมาณ/เดือน (75%)", isYearly ? "เบิกจ่าย (ทั้งปี)" : "เบิกจ่าย (เดือนนี้)", "คงเหลือ/เดือน", "คงเหลือ/ปี"];
+        const rows = allRelevantCodes.map(code => {
+            const account = accountData.find(a => a.code === code);
+            if (!account) return null;
+
+            let annualBudgetForDept = 0;
+            if (deptFilterValue === 'all') {
+                annualBudgetForDept = Object.values(account.budgets).reduce((sum, b) => sum + b, 0);
+            } else {
+                annualBudgetForDept = account.budgets[deptFilterValue] || 0;
+            }
+
+            const monthlyBudgetFull = annualBudgetForDept / 12;
+            const monthlyBudget75 = monthlyBudgetFull * 0.75;
+            const periodBudgetDisplay = isYearly ? annualBudgetForDept : monthlyBudget75;
+
+            const periodSpent = filteredForSummary
+                .filter(d => d.accountCode === code)
+                .reduce((sum, d) => sum + parseFloat(d.price), 0);
+
+            let totalSpentYear = 0;
+            const currentYear = selectedPeriod.substring(0, 4);
+            if (isYearly) {
+                totalSpentYear = periodSpent;
+            } else {
+                totalSpentYear = disbursements
+                    .filter(d => {
+                        const codeMatch = d.accountCode === code;
+                        const yearMatch = d.date.startsWith(currentYear);
+                        const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
+                        return codeMatch && yearMatch && deptMatch;
+                    })
+                    .reduce((sum, d) => sum + parseFloat(d.price), 0);
+            }
+
+            const remainingMonth = monthlyBudget75 - (isYearly ? (periodSpent / 12) : periodSpent);
+            const remainingYear = annualBudgetForDept - totalSpentYear;
+
+            return [
+                code,
+                account.name,
+                annualBudgetForDept,
+                periodBudgetDisplay,
+                periodSpent,
+                remainingMonth,
+                remainingYear
+            ];
+        }).filter(r => r !== null) as any[][];
+
+        exportToCsv(`budget_summary_${selectedPeriod}.csv`, header, rows);
     });
 
     // Settings Modal Logic

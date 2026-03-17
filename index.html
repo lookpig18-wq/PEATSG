@@ -56,10 +56,6 @@
                     <span class="block text-xl mt-1 font-normal opacity-90">(Smart Budget Control & Tracking System)</span>
                 </h1>
                 <div class="flex items-center space-x-4">
-                    <button id="export-btn-header" class="inline-flex items-center justify-center space-x-2 mt-2 sm:mt-0 text-sm bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h1v4"/><path d="M12 13h1v4"/><path d="M15 13h1v4"/><path d="M8.5 13H8"/><path d="M12.5 13h-1"/><path d="M15.5 13h-1"/></svg>
-                        <span>ดาวน์โหลด Excel</span>
-                    </button>
                     <button id="settings-btn" class="p-2 rounded-full hover:bg-white/20 admin-only">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
@@ -186,7 +182,14 @@
 
                 <div id="table-column" class="lg:col-span-2">
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-                        <div class="w-full sm:w-auto">
+                        <div class="flex items-center space-x-4">
+                            <h2 class="text-xl font-bold text-white">รายการที่บันทึก</h2>
+                            <button id="export-recorded-data-btn" class="inline-flex items-center justify-center space-x-2 text-xs bg-green-600 hover:bg-green-700 text-white py-1.5 px-3 rounded-md shadow-sm" title="ดาวน์โหลดข้อมูลที่บันทึก">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span>โหลดข้อมูลบันทึก</span>
+                            </button>
+                        </div>
+                        <div class="w-full sm:w-auto mt-4 sm:mt-0">
                             <label for="status-filter" class="text-sm font-medium text-white">กรองตามสถานะ:</label>
                             <select id="status-filter" class="mt-1 sm:mt-0 ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                                 <option value="all">ทั้งหมด</option>
@@ -221,7 +224,13 @@
                     </div>
                     
                     <div id="summary" class="mt-6 bg-white p-6 rounded-2xl shadow-sm">
-                        <h3 class="text-lg font-bold">สรุปรายการเบิกจ่าย</h3>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold">สรุปรายการเบิกจ่าย</h3>
+                            <button id="export-disbursement-summary-btn" class="inline-flex items-center justify-center space-x-1 text-xs bg-green-600 hover:bg-green-700 text-white py-1.5 px-3 rounded-md shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span>โหลดสรุปเบิกจ่าย</span>
+                            </button>
+                        </div>
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                             <div>
                                 <label for="summary-type-filter" class="block text-sm font-medium text-black">สรุปข้อมูลตาม</label>
@@ -270,7 +279,13 @@
                         <div id="summary-content" class="mt-4 pt-4 border-t border-gray-200 text-black">กำลังคำนวณ...</div>
                         <div id="summary-details-list" class="mt-4 max-h-60 overflow-y-auto"></div>
                         <div id="budget-summary-container" class="mt-6 pt-6 border-t border-gray-200 hidden">
-                            <h4 id="budget-summary-title" class="font-bold text-md mb-3">สรุปงบประมาณรายบัญชี</h4>
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 id="budget-summary-title" class="font-bold text-md">สรุปงบประมาณรายบัญชี</h4>
+                                <button id="export-budget-summary-btn" class="inline-flex items-center justify-center space-x-1 text-[10px] bg-green-600 hover:bg-green-700 text-white py-1 px-2 rounded-md shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    <span>โหลดสรุปงบประมาณ</span>
+                                </button>
+                            </div>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200 text-xs">
                                     <thead class="bg-gray-50">
