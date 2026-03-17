@@ -324,12 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const budgetColSpent = document.getElementById('budget-col-spent')!;
         
         if ((summaryType === 'monthly' || summaryType === 'yearly') && selectedPeriod) {
-            const currentUser = sessionStorage.getItem('currentUser');
-            if (currentUser === '9012844') {
-                budgetSummaryContainer.classList.remove('hidden');
-            } else {
-                budgetSummaryContainer.classList.add('hidden');
-            }
+            // Show for all users when a period is selected
+            budgetSummaryContainer.classList.remove('hidden');
             budgetSummaryBody.innerHTML = '';
 
             const isYearly = summaryType === 'yearly';
