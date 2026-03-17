@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบริหารจัดการและควบคุมงบประมาณอัจฉริยะ (Smart Budget Control & Tracking System)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #a855f7, #f59e0b);
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     </style>
 </head>
 <body class="text-black">
@@ -50,228 +49,245 @@
     </div>
 
     <div id="app-container" class="hidden">
-
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-        <header class="mb-8 flex flex-col sm:flex-row justify-between items-center">
-            <h1 class="text-3xl font-bold text-white leading-tight text-center sm:text-left">
-                ระบบบริหารจัดการและควบคุมงบประมาณอัจฉริยะ
-                <span class="block text-xl mt-1 font-normal opacity-90">(Smart Budget Control & Tracking System)</span>
-            </h1>
-            <div class="flex items-center space-x-4">
-                <button id="export-btn-header" class="inline-flex items-center justify-center space-x-2 mt-2 sm:mt-0 text-sm bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h1v4"/><path d="M12 13h1v4"/><path d="M15 13h1v4"/><path d="M8.5 13H8"/><path d="M12.5 13h-1"/><path d="M15.5 13h-1"/></svg>
-                    <span>ดาวน์โหลด Excel</span>
-                </button>
-                <button id="settings-btn" class="p-2 rounded-full hover:bg-white/20 admin-only">
-                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-                <button id="header-logout-btn" class="p-2 rounded-full hover:bg-white/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                </button>
-            </div>
-        </header>
-
-        <div id="main-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <div id="form-column" class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm admin-only">
-                <h2 id="form-title" class="text-xl font-bold mb-4">บันทึกข้อมูล</h2>
-                <form id="disbursement-form" class="space-y-4">
-                    <input type="hidden" id="disbursement-id">
-                    <div>
-                        <label for="account-code" class="block text-sm font-medium text-black">รหัสบัญชี</label>
-                        <input type="text" id="account-code" list="account-codes" placeholder="พิมพ์เพื่อค้นหารหัสบัญชี..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                        <datalist id="account-codes"></datalist>
-                    </div>
-                    <div>
-                        <label for="account-name" class="block text-sm font-medium text-black">ชื่อบัญชี</label>
-                        <input type="text" id="account-name" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
-                    </div>
-                    <div>
-                        <label for="cost-center" class="block text-sm font-medium text-black">ศูนย์ต้นทุน</label>
-                        <select id="cost-center" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                            <option value="">-- เลือกศูนย์ต้นทุน --</option>
-                            <option value="ผบง.">ศูนย์ต้นทุน ผบง.</option>
-                            <option value="กบห.">ศูนย์ต้นทุน กบห.</option>
-                            <option value="ผปร.">ศูนย์ต้นทุน ผปร.</option>
-                            <option value="ผบค.">ศูนย์ต้นทุน ผบค.</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="date" class="block text-sm font-medium text-black">วันที่</label>
-                        <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                    </div>
-                    <div>
-                        <label for="description" class="block text-sm font-medium text-black">รายละเอียด</label>
-                        <input type="text" id="description" placeholder="เช่น ค่าเดินทาง, ค่าวัสดุ" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="price" class="block text-sm font-medium text-black">ราคา (บาท)</label>
-                            <input type="number" id="price" step="0.01" min="0" placeholder="1000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                        </div>
-                        <div>
-                            <label for="tax" class="block text-sm font-medium text-black">ภาษี (%)</label>
-                            <input type="number" id="tax" step="0.01" min="0" placeholder="7" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                        </div>
-                    </div>
-                     <div>
-                        <label for="total-price" class="block text-sm font-medium text-black">ราคารวม VAT</label>
-                        <input type="text" id="total-price" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
-                    </div>
-                    <div>
-                        <label for="wht" class="block text-sm font-medium text-black">หัก ณ ที่จ่าย (%)</label>
-                        <input type="number" id="wht" step="0.01" min="0" placeholder="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    </div>
-                     <div>
-                        <label for="net-total" class="block text-sm font-medium text-black">ยอดสุทธิหลังหักภาษี</label>
-                        <input type="text" id="net-total" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
-                    </div>
-                    <div>
-                        <label for="payee" class="block text-sm font-medium text-black">ผู้รับเงิน</label>
-                        <input type="text" id="payee" placeholder="ชื่อ-นามสกุล หรือ ชื่อบริษัท" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                    </div>
-                    <div>
-                        <label for="payment-method" class="block text-sm font-medium text-black">รูปแบบการจ่าย</label>
-                        <select id="payment-method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            <option>เงินสด</option>
-                            <option>เช็ค</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-black">สถานะ</label>
-                        <div class="mt-2 space-x-4">
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="status" value="กำลังดำเนินการ" class="text-indigo-600 focus:ring-indigo-500" checked>
-                                <span class="ml-2">กำลังดำเนินการ</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="status" value="เสร็จสิ้น" class="text-indigo-600 focus:ring-indigo-500">
-                                <span class="ml-2">เสร็จสิ้น</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div id="attachment-container" class="hidden">
-                        <label for="attachment" class="block text-sm font-medium text-black">แนบไฟล์ PDF (สูงสุด 5MB)</label>
-                        <input type="file" id="attachment" accept=".pdf" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
-                        <p id="attachment-name" class="text-sm text-gray-500 mt-1"></p>
-                    </div>
-                    <div class="flex items-center space-x-4 pt-2">
-                        <button type="submit" id="submit-btn" class="w-full inline-flex items-center justify-center space-x-2 py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                            <span>บันทึก</span>
-                        </button>
-                        <button type="button" id="cancel-btn" class="w-full inline-flex items-center justify-center space-x-2 py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" style="display: none;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
-                            <span>ยกเลิก</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div id="table-column" class="lg:col-span-2">
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-                    <div class="w-full sm:w-auto">
-                        <label for="status-filter" class="text-sm font-medium text-white">กรองตามสถานะ:</label>
-                        <select id="status-filter" class="mt-1 sm:mt-0 ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            <option value="all">ทั้งหมด</option>
-                            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
-                            <option value="เสร็จสิ้น">เสร็จสิ้น</option>
-                        </select>
-                    </div>
+        <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+            <header class="mb-8 flex flex-col sm:flex-row justify-between items-center">
+                <h1 class="text-3xl font-bold text-white leading-tight text-center sm:text-left">
+                    ระบบบริหารจัดการและควบคุมงบประมาณอัจฉริยะ
+                    <span class="block text-xl mt-1 font-normal opacity-90">(Smart Budget Control & Tracking System)</span>
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <button id="export-btn-header" class="inline-flex items-center justify-center space-x-2 mt-2 sm:mt-0 text-sm bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h1v4"/><path d="M12 13h1v4"/><path d="M15 13h1v4"/><path d="M8.5 13H8"/><path d="M12.5 13h-1"/><path d="M15.5 13h-1"/></svg>
+                        <span>ดาวน์โหลด Excel</span>
+                    </button>
+                    <button id="settings-btn" class="p-2 rounded-full hover:bg-white/20 admin-only">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button id="header-logout-btn" class="p-2 rounded-full hover:bg-white/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
                 </div>
+            </header>
 
-                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รหัสบัญชี / ศูนย์ต้นทุน</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายละเอียด</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้รับเงิน</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ยอดสุทธิ (บาท)</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ไฟล์แนบ</th>
-                                    <th scope="col" class="relative px-6 py-3 admin-only">
-                                        <span class="sr-only">Actions</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="disbursement-table-body" class="bg-white divide-y divide-gray-200">
-                                <!-- Data will be injected here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div id="summary" class="mt-6 bg-white p-6 rounded-2xl shadow-sm">
-                    <h3 class="text-lg font-bold">สรุปรายการเบิกจ่าย</h3>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+            <div id="main-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div id="form-column" class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm admin-only">
+                    <h2 id="form-title" class="text-xl font-bold mb-4">บันทึกข้อมูล</h2>
+                    <form id="disbursement-form" class="space-y-4">
+                        <input type="hidden" id="disbursement-id">
                         <div>
-                            <label for="summary-type-filter" class="block text-sm font-medium text-black">สรุปข้อมูลตาม</label>
-                            <select id="summary-type-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="all">ภาพรวมทั้งหมด</option>
-                                <option value="daily">รายวัน</option>
-                                <option value="monthly">รายเดือน</option>
-                                <option value="yearly">รายปี</option>
-                                <option value="payee">รายชื่อผู้รับเงิน</option>
+                            <label for="account-code" class="block text-sm font-medium text-black">รหัสบัญชี</label>
+                            <input type="text" id="account-code" list="account-codes" placeholder="พิมพ์เพื่อค้นหารหัสบัญชี..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                            <datalist id="account-codes"></datalist>
+                        </div>
+                        <div>
+                            <label for="account-name" class="block text-sm font-medium text-black">ชื่อบัญชี</label>
+                            <input type="text" id="account-name" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
+                        </div>
+                        <div>
+                            <label for="cost-center" class="block text-sm font-medium text-black">ศูนย์ต้นทุน</label>
+                            <select id="cost-center" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                <option value="">-- เลือกศูนย์ต้นทุน --</option>
+                                <option value="ผบง.">ศูนย์ต้นทุน ผบง.</option>
+                                <option value="กบห.">ศูนย์ต้นทุน กบห.</option>
+                                <option value="ผปร.">ศูนย์ต้นทุน ผปร.</option>
+                                <option value="ผบค.">ศูนย์ต้นทุน ผบค.</option>
                             </select>
                         </div>
                         <div>
-                            <label for="summary-dept-filter" class="block text-sm font-medium text-black">ศูนย์ต้นทุน (แผนก)</label>
-                            <select id="summary-dept-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="all">ทั้งหมด (ภาพรวม)</option>
-                                <option value="ผบง.">ผบง.</option>
-                                <option value="กบห.">กบห.</option>
-                                <option value="ผปร.">ผปร.</option>
-                                <option value="ผบค.">ผบค.</option>
+                            <label for="date" class="block text-sm font-medium text-black">วันที่</label>
+                            <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-black">รายละเอียด</label>
+                            <input type="text" id="description" placeholder="เช่น ค่าเดินทาง, ค่าวัสดุ" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="price" class="block text-sm font-medium text-black">ราคา (บาท)</label>
+                                <input type="number" id="price" step="0.01" min="0" placeholder="1000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                            </div>
+                            <div>
+                                <label for="tax" class="block text-sm font-medium text-black">ภาษี (%)</label>
+                                <input type="number" id="tax" step="0.01" min="0" placeholder="7" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                            </div>
+                        </div>
+                         <div>
+                            <label for="total-price" class="block text-sm font-medium text-black">ราคารวม VAT</label>
+                            <input type="text" id="total-price" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
+                        </div>
+                        <div>
+                            <label for="wht" class="block text-sm font-medium text-black">หัก ณ ที่จ่าย (%)</label>
+                            <input type="number" id="wht" step="0.01" min="0" placeholder="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                         <div>
+                            <label for="net-total" class="block text-sm font-medium text-black">ยอดสุทธิหลังหักภาษี</label>
+                            <input type="text" id="net-total" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
+                        </div>
+                        <div>
+                            <label for="payee" class="block text-sm font-medium text-black">ผู้รับเงิน</label>
+                            <input type="text" id="payee" placeholder="ชื่อ-นามสกุล หรือ ชื่อบริษัท" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        </div>
+                        <div>
+                            <label for="payment-method" class="block text-sm font-medium text-black">รูปแบบการจ่าย</label>
+                            <select id="payment-method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option>เงินสด</option>
+                                <option>เช็ค</option>
                             </select>
                         </div>
-                        <div id="specific-filters-container">
-                            <div id="daily-filter-container" class="hidden">
-                                <label for="summary-date" class="block text-sm font-medium text-black">เลือกวัน</label>
-                                <input type="date" id="summary-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <div>
+                            <label class="block text-sm font-medium text-black">สถานะ</label>
+                            <div class="mt-2 space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="status" value="กำลังดำเนินการ" class="text-indigo-600 focus:ring-indigo-500" checked>
+                                    <span class="ml-2">กำลังดำเนินการ</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="status" value="เสร็จสิ้น" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="ml-2">เสร็จสิ้น</span>
+                                </label>
                             </div>
-                            <div id="monthly-filter-container" class="hidden">
-                                <label for="summary-month" class="block text-sm font-medium text-black">เลือกเดือน</label>
-                                <input type="month" id="summary-month" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                        <div id="attachment-container" class="hidden">
+                            <label for="attachment" class="block text-sm font-medium text-black">แนบไฟล์ PDF (สูงสุด 5MB)</label>
+                            <input type="file" id="attachment" accept=".pdf" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+                            <p id="attachment-name" class="text-sm text-gray-500 mt-1"></p>
+                        </div>
+                        <div class="flex items-center space-x-4 pt-2">
+                            <button type="submit" id="submit-btn" class="w-full inline-flex items-center justify-center space-x-2 py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                <span>บันทึก</span>
+                            </button>
+                            <button type="button" id="cancel-btn" class="w-full inline-flex items-center justify-center space-x-2 py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" style="display: none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+                                <span>ยกเลิก</span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Budget Info Section -->
+                    <div id="budget-info" class="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100 hidden">
+                        <h3 class="text-sm font-bold text-indigo-900 mb-2">ข้อมูลการใช้งบประมาณ</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-600">งบประมาณที่ได้รับ:</span>
+                                <span id="budget-allocated" class="font-semibold text-gray-900">0.00</span>
                             </div>
-                            <div id="yearly-filter-container" class="hidden">
-                                <label for="summary-year" class="block text-sm font-medium text-black">เลือกปี</label>
-                                <select id="summary-year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                    <option value="2024">2024</option>
-                                    <option value="2025">2025</option>
-                                    <option value="2026">2026</option>
-                                </select>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-gray-600">งบประมาณคงเหลือ:</span>
+                                <span id="budget-remaining" class="font-semibold text-gray-900">0.00</span>
                             </div>
-                            <div id="payee-filter-container" class="hidden">
-                                <label for="summary-payee" class="block text-sm font-medium text-black">เลือกผู้รับเงิน</label>
-                                <select id="summary-payee" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></select>
+                            <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                <div id="budget-progress" class="bg-indigo-600 h-1.5 rounded-full" style="width: 0%"></div>
                             </div>
+                            <p id="budget-usage-text" class="text-[10px] text-right text-gray-500">ใช้ไป 0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="table-column" class="lg:col-span-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                        <div class="w-full sm:w-auto">
+                            <label for="status-filter" class="text-sm font-medium text-white">กรองตามสถานะ:</label>
+                            <select id="status-filter" class="mt-1 sm:mt-0 ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="all">ทั้งหมด</option>
+                                <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                                <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div id="summary-content" class="mt-4 pt-4 border-t border-gray-200 text-black">กำลังคำนวณ...</div>
-                    <div id="summary-details-list" class="mt-4 max-h-60 overflow-y-auto"></div>
-                    <div id="budget-summary-container" class="mt-6 pt-6 border-t border-gray-200 hidden super-admin-only">
-                        <h4 id="budget-summary-title" class="font-bold text-md mb-3">สรุปงบประมาณรายบัญชี</h4>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 text-xs">
+                    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                         <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">รหัสบัญชี</th>
-                                        <th id="budget-col-annual" class="px-3 py-2 text-right font-medium text-gray-500 uppercase">งบประมาณ/ปี</th>
-                                        <th id="budget-col-period" class="px-3 py-2 text-right font-medium text-gray-500 uppercase text-[10px]">งบประมาณ/เดือน<br>(คิดเป็น 75% ของงบประมาณที่ได้รับ)</th>
-                                        <th id="budget-col-spent" class="px-3 py-2 text-right font-medium text-gray-500 uppercase">เบิกจ่ายจริง</th>
-                                        <th class="px-3 py-2 text-right font-medium text-gray-500 uppercase">คงเหลือ/เดือน</th>
-                                        <th class="px-3 py-2 text-right font-medium text-gray-500 uppercase">คงเหลือ/ปี</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รหัสบัญชี / ศูนย์ต้นทุน</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายละเอียด</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้รับเงิน</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ยอดสุทธิ (บาท)</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ไฟล์แนบ</th>
+                                        <th scope="col" class="relative px-6 py-3 admin-only">
+                                            <span class="sr-only">Actions</span>
+                                        </th>
                                     </tr>
                                 </thead>
-                                <tbody id="budget-summary-body" class="bg-white divide-y divide-gray-200">
-                                    <!-- Budget summary rows will be injected here -->
+                                <tbody id="disbursement-table-body" class="bg-white divide-y divide-gray-200">
+                                    <!-- Data will be injected here -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                    
+                    <div id="summary" class="mt-6 bg-white p-6 rounded-2xl shadow-sm">
+                        <h3 class="text-lg font-bold">สรุปรายการเบิกจ่าย</h3>
+                        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                            <div>
+                                <label for="summary-type-filter" class="block text-sm font-medium text-black">สรุปข้อมูลตาม</label>
+                                <select id="summary-type-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    <option value="all">ภาพรวมทั้งหมด</option>
+                                    <option value="daily">รายวัน</option>
+                                    <option value="monthly">รายเดือน</option>
+                                    <option value="yearly">รายปี</option>
+                                    <option value="payee">รายชื่อผู้รับเงิน</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="summary-dept-filter" class="block text-sm font-medium text-black">ศูนย์ต้นทุน (แผนก)</label>
+                                <select id="summary-dept-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    <option value="all">ทั้งหมด (ภาพรวม)</option>
+                                    <option value="ผบง.">ผบง.</option>
+                                    <option value="กบห.">กบห.</option>
+                                    <option value="ผปร.">ผปร.</option>
+                                    <option value="ผบค.">ผบค.</option>
+                                </select>
+                            </div>
+                            <div id="specific-filters-container">
+                                <div id="daily-filter-container" class="hidden">
+                                    <label for="summary-date" class="block text-sm font-medium text-black">เลือกวัน</label>
+                                    <input type="date" id="summary-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                </div>
+                                <div id="monthly-filter-container" class="hidden">
+                                    <label for="summary-month" class="block text-sm font-medium text-black">เลือกเดือน</label>
+                                    <input type="month" id="summary-month" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                </div>
+                                <div id="yearly-filter-container" class="hidden">
+                                    <label for="summary-year" class="block text-sm font-medium text-black">เลือกปี</label>
+                                    <select id="summary-year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026">2026</option>
+                                    </select>
+                                </div>
+                                <div id="payee-filter-container" class="hidden">
+                                    <label for="summary-payee" class="block text-sm font-medium text-black">เลือกผู้รับเงิน</label>
+                                    <select id="summary-payee" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="summary-content" class="mt-4 pt-4 border-t border-gray-200 text-black">กำลังคำนวณ...</div>
+                        <div id="summary-details-list" class="mt-4 max-h-60 overflow-y-auto"></div>
+                        <div id="budget-summary-container" class="mt-6 pt-6 border-t border-gray-200 hidden super-admin-only">
+                            <h4 id="budget-summary-title" class="font-bold text-md mb-3">สรุปงบประมาณรายบัญชี</h4>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">รหัสบัญชี</th>
+                                            <th id="budget-col-annual" class="px-3 py-2 text-right font-medium text-gray-500 uppercase">งบประมาณ/ปี</th>
+                                            <th id="budget-col-period" class="px-3 py-2 text-right font-medium text-gray-500 uppercase text-[10px]">งบประมาณ/เดือน<br>(คิดเป็น 75% ของงบประมาณที่ได้รับ)</th>
+                                            <th id="budget-col-spent" class="px-3 py-2 text-right font-medium text-gray-500 uppercase">เบิกจ่ายจริง</th>
+                                            <th class="px-3 py-2 text-right font-medium text-gray-500 uppercase">คงเหลือ/เดือน</th>
+                                            <th class="px-3 py-2 text-right font-medium text-gray-500 uppercase">คงเหลือ/ปี</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="budget-summary-body" class="bg-white divide-y divide-gray-200">
+                                        <!-- Budget summary rows will be injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -279,975 +295,8 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginScreen = document.getElementById('login-screen');
-            const appContainer = document.getElementById('app-container');
-            const loginForm = document.getElementById('login-form');
-            const usernameInput = document.getElementById('username');
-            const passwordInput = document.getElementById('password');
-            const loginError = document.getElementById('login-error');
-            const guestLoginBtn = document.getElementById('guest-login-btn');
-
-            const form = document.getElementById('disbursement-form');
-            const formTitle = document.getElementById('form-title');
-            const tableBody = document.getElementById('disbursement-table-body');
-            const statusFilter = document.getElementById('status-filter');
-            const summaryContent = document.getElementById('summary-content');
-            const disbursementIdInput = document.getElementById('disbursement-id');
-            const priceInput = document.getElementById('price');
-            const taxInput = document.getElementById('tax');
-            const totalPriceInput = document.getElementById('total-price');
-            const whtInput = document.getElementById('wht');
-            const netTotalInput = document.getElementById('net-total');
-            const submitBtn = document.getElementById('submit-btn');
-            const cancelBtn = document.getElementById('cancel-btn');
-            const exportBtnHeader = document.getElementById('export-btn-header');
-            const summaryTypeFilter = document.getElementById('summary-type-filter');
-            const specificFiltersContainer = document.getElementById('specific-filters-container');
-            const dailyFilterContainer = document.getElementById('daily-filter-container');
-            const summaryDate = document.getElementById('summary-date');
-            const monthlyFilterContainer = document.getElementById('monthly-filter-container');
-            const summaryMonth = document.getElementById('summary-month');
-            const yearlyFilterContainer = document.getElementById('yearly-filter-container');
-            const summaryYear = document.getElementById('summary-year');
-            const summaryDeptFilter = document.getElementById('summary-dept-filter');
-            const payeeFilterContainer = document.getElementById('payee-filter-container');
-            const summaryPayee = document.getElementById('summary-payee');
-            const attachmentContainer = document.getElementById('attachment-container');
-            const attachmentInput = document.getElementById('attachment');
-            const attachmentNameDisplay = document.getElementById('attachment-name');
-            const statusRadios = document.querySelectorAll('input[name="status"]');
-
-            const accountCodeInput = document.getElementById('account-code');
-            const accountNameInput = document.getElementById('account-name');
-            const costCenterInput = document.getElementById('cost-center');
-            const accountCodesDatalist = document.getElementById('account-codes');
-            const budgetInfo = document.getElementById('budget-info');
-            const budgetAllocatedDisplay = document.getElementById('budget-allocated');
-            const budgetRemainingDisplay = document.getElementById('budget-remaining');
-            const budgetProgress = document.getElementById('budget-progress');
-            const budgetUsageText = document.getElementById('budget-usage-text');
-
-            const defaultAccountData = [
-                { code: "52010030", name: "ค่าล่วงเวลาพนักงาน", budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 480000, "ผบค.": 370000 } },
-                { code: "52010100", name: "ค่าล่วงเวลา - ลูกจ้าง", budgets: { "ผบง.": 26000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "52010990", name: "ค่าตอบแทนอื่น-พนักงาน", budgets: { "ผบง.": 7000, "กบห.": 8500, "ผปร.": 7000, "ผบค.": 7000 } },
-                { code: "52012020", name: "เงินเพิ่มฮอทไลน์", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 62000, "ผบค.": 0 } },
-                { code: "52012070", name: "ค่าโทรศัพท์เคลื่อนที่-ผู้บริหาร", budgets: { "ผบง.": 0, "กบห.": 12000, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "52020030", name: "เงินช่วยเหลือค่าเล่าเรียนบุตร", budgets: { "ผบง.": 6000, "กบห.": 0, "ผปร.": 0, "ผบค.": 26000 } },
-                { code: "52020990", name: "เงินช่วยเหลืออื่น", budgets: { "ผบง.": 4500, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "52022010", name: "ค่าพาหนะเดินทางไปปฏิบัติงานต่างท้องที่-พนักงาน", budgets: { "ผบง.": 500, "กบห.": 500, "ผปร.": 500, "ผบค.": 500 } },
-                { code: "52022020", name: "ค่าเบี้ยเลี้ยง-พนักงาน", budgets: { "ผบง.": 20000, "กบห.": 23000, "ผปร.": 22000, "ผบค.": 22000 } },
-                { code: "52022030", name: "ค่าที่พัก-พนักงาน", budgets: { "ผบง.": 35000, "กบห.": 39000, "ผปร.": 35000, "ผบค.": 35000 } },
-                { code: "52022050", name: "ค่าชดเชยการใช้ยานพาหนะส่วนตัว", budgets: { "ผบง.": 37000, "กบห.": 10000, "ผปร.": 37000, "ผบค.": 37000 } },
-                { code: "52029010", name: "ค่าเช่าบ้าน", budgets: { "ผบง.": 72000, "กบห.": 72000, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53010020", name: "ค่าตอบแทน-การจดหน่วยและแจ้งหนี้กระแสไฟฟ้า", budgets: { "ผบง.": 1740000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53010070", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันงานบำรุงรักษา", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 1250000, "ผบค.": 0 } },
-                { code: "53010080", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันงานบริการ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 660000 } },
-                { code: "53010090", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันทั่วไป", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 370000, "ผบค.": 0 } },
-                { code: "53019990", name: "ค่าตอบแทนอื่น ๆ", budgets: { "ผบง.": 5000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53021010", name: "ค่าป้ายประชาสัมพันธ์", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 4500 } },
-                { code: "53021020", name: "ค่าประชาสัมพันธ์อื่น", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 15000 } },
-                { code: "53021030", name: "ค่าประชาสัมพันธ์ทางสื่อ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 1000 } },
-                { code: "53030010", name: "ค่าวัสดุสำนักงาน", budgets: { "ผบง.": 65000, "กบห.": 0, "ผปร.": 65000, "ผบค.": 65000 } },
-                { code: "53030030", name: "ค่าวัสดุเบ็ดเตล็ด", budgets: { "ผบง.": 38000, "กบห.": 0, "ผปร.": 7000, "ผบค.": 7000 } },
-                { code: "53031010", name: "ค่าน้ำดื่ม", budgets: { "ผบง.": 5600, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53031020", name: "ค่าน้ำประปา", budgets: { "ผบง.": 27000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53032010", name: "ค่าใช้บริการโทรศัพท์", budgets: { "ผบง.": 20000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53032020", name: "ค่าบำรุงรักษาคู่สายโทรศัพท์", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53032060", name: "ค่าไปรษณีย์ โทรเลข", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53032080", name: "ค่าใช้จ่ายในการใช้อินเตอร์เน็ต", budgets: { "ผบง.": 8400, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53034010", name: "ค่าจ้างเหมาทำความสะอาด", budgets: { "ผบง.": 220000, "กบห.": 0, "ผปร.": 26400, "ผบค.": 0 } },
-                { code: "53034030", name: "ค่าจ้างบำรุงรักษาสวน", budgets: { "ผบง.": 72000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53034040", name: "ค่าบำรุงรักษาบริเวณสำนักงาน", budgets: { "ผบง.": 38000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53039010", name: "ค่าเชื้อเพลิงยานพาหนะ", budgets: { "ผบง.": 92000, "กบห.": 97000, "ผปร.": 460000, "ผบค.": 155000 } },
-                { code: "53039990", name: "ค่าใช้จ่ายเบ็ดเตล็ด", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53051040", name: "ค่าซ่อมแซมบำรุงรักษา-อาคาร", budgets: { "ผบง.": 175000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53051050", name: "ค่าซ่อมแซมบำรุงรักษา-ยานพาหนะ", budgets: { "ผบง.": 10000, "กบห.": 0, "ผปร.": 140000, "ผบค.": 30000 } },
-                { code: "53051060", name: "ค่าซ่อมแซมบำรุงรักษา-คอมฯ&อุปกรณ์ประกอบคอมฯ", budgets: { "ผบง.": 30000, "กบห.": 0, "ผปร.": 30000, "ผบค.": 30000 } },
-                { code: "53051090", name: "ค่าวัสดุเบ็ดเตล็ดด้านช่าง", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 15000, "ผบค.": 15000 } },
-                { code: "53051100", name: "ค่าซ่อมแซมบำรุงรักษาอุปกรณ์ในสำนักงาน", budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 20000, "ผบค.": 20000 } },
-                { code: "53051990", name: "ค่าซ่อมแซมบำรุงรักษาอื่น ๆ", budgets: { "ผบง.": 10000, "กบห.": 0, "ผปร.": 10000, "ผบค.": 10000 } },
-                { code: "53062020", name: "ค่าเบี้ยประกัน-ยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 20000, "ผบค.": 0 } },
-                { code: "53064010", name: "ค่าภาษีที่ดินฯ", budgets: { "ผบง.": 30000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53064020", name: "ค่าภาษีและค่าธรรมเนียมยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 30000, "ผบค.": 0 } },
-                { code: "53069020", name: "ค่าขนส่ง ขนย้าย", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 1000, "ผบค.": 0 } },
-                { code: "53069070", name: "ค่าธรรมเนียมธนาคาร", budgets: { "ผบง.": 9000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-                { code: "53069110", name: "ค่าตรวจสภาพยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 2500, "ผบค.": 0 } },
-                { code: "53069990", name: "ค่าใช้จ่ายอื่น", budgets: { "ผบง.": 80000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } }
-            ];
-
-            let accountData = JSON.parse(localStorage.getItem('accountData')) || defaultAccountData;
-
-            const populateAccountDatalist = () => {
-                accountCodesDatalist.innerHTML = '';
-                accountData.forEach(acc => {
-                    const option = document.createElement('option');
-                    option.value = acc.code;
-                    option.textContent = acc.name;
-                    accountCodesDatalist.appendChild(option);
-                });
-            };
-
-            const updateBudgetInfo = () => {
-                const code = accountCodeInput.value;
-                const costCenter = costCenterInput.value;
-                const currentId = disbursementIdInput.value;
-                const currentPrice = parseFloat(priceInput.value) || 0;
-
-                const account = accountData.find(acc => acc.code === code);
-                
-                if (account && costCenter && account.budgets[costCenter] !== undefined) {
-                    const allocated = account.budgets[costCenter];
-                    
-                    // Calculate total spent for this account and cost center (excluding current editing item)
-                    const spent = disbursements
-                        .filter(d => d.accountCode === code && d.costCenter === costCenter && d.id !== currentId)
-                        .reduce((sum, d) => sum + parseFloat(d.price), 0);
-                    
-                    const totalSpentWithCurrent = spent + currentPrice;
-                    const remaining = allocated - totalSpentWithCurrent;
-                    const usagePercent = allocated > 0 ? (totalSpentWithCurrent / allocated * 100) : 0;
-
-                    if (budgetAllocatedDisplay) budgetAllocatedDisplay.textContent = allocated.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    if (budgetRemainingDisplay) budgetRemainingDisplay.textContent = remaining.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    if (budgetProgress) {
-                        budgetProgress.style.width = `${Math.min(usagePercent, 100)}%`;
-                        if (usagePercent > 90) {
-                            budgetProgress.className = 'bg-red-600 h-1.5 rounded-full';
-                        } else if (usagePercent > 70) {
-                            budgetProgress.className = 'bg-yellow-600 h-1.5 rounded-full';
-                        } else {
-                            budgetProgress.className = 'bg-indigo-600 h-1.5 rounded-full';
-                        }
-                    }
-                    if (budgetUsageText) budgetUsageText.textContent = `ใช้ไป ${usagePercent.toFixed(1)}%`;
-                    
-                    const currentUser = sessionStorage.getItem('currentUser');
-                    if (currentUser === '9012844' && budgetInfo) {
-                        budgetInfo.classList.remove('hidden');
-                    }
-                } else {
-                    if (budgetInfo) budgetInfo.classList.add('hidden');
-                }
-            };
-
-            accountCodeInput.addEventListener('input', () => {
-                const account = accountData.find(acc => acc.code === accountCodeInput.value);
-                if (account) {
-                    accountNameInput.value = account.name;
-                } else {
-                    accountNameInput.value = '';
-                }
-                updateBudgetInfo();
-            });
-
-            costCenterInput.addEventListener('change', updateBudgetInfo);
-
-            let disbursements = JSON.parse(localStorage.getItem('disbursements')) || [];
-
-            const updateSummary = () => {
-                const mainFilterValue = statusFilter.value;
-                const deptFilterValue = summaryDeptFilter.value;
-
-                let filteredForTable = disbursements.filter(d => {
-                    const statusMatch = mainFilterValue === 'all' || d.status === mainFilterValue;
-                    const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
-                    return statusMatch && deptMatch;
-                });
-
-                const summaryType = summaryTypeFilter.value;
-                let summaryData = [];
-                let selectedPeriod = ''; // Can be month (YYYY-MM) or year (YYYY)
-
-                switch (summaryType) {
-                    case 'daily':
-                        if (summaryDate.value) {
-                            summaryData = filteredForTable.filter(d => d.date === summaryDate.value);
-                        }
-                        break;
-                    case 'monthly':
-                        if (summaryMonth.value) {
-                            selectedPeriod = summaryMonth.value;
-                            summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
-                        }
-                        break;
-                    case 'yearly':
-                        if (summaryYear.value) {
-                            selectedPeriod = summaryYear.value;
-                            summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
-                        }
-                        break;
-                    case 'payee':
-                        if (summaryPayee.value) {
-                            summaryData = filteredForTable.filter(d => d.payee === summaryPayee.value);
-                        }
-                        break;
-                    default: // 'all'
-                        summaryData = [...filteredForTable];
-                        break;
-                }
-
-                const total = summaryData.reduce((sum, d) => sum + parseFloat(d.price), 0);
-                summaryContent.innerHTML = `
-                    <p>จำนวน (ตามตัวกรองสรุป): ${summaryData.length} รายการ</p>
-                    <p class="font-semibold">ยอดรวม (ตามตัวกรองสรุป): ${total.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
-                `;
-
-                const summaryDetailsList = document.getElementById('summary-details-list');
-                summaryDetailsList.innerHTML = '';
-
-                if (summaryData.length > 0 && summaryType !== 'all') {
-                    const list = document.createElement('ul');
-                    list.className = 'divide-y divide-gray-200';
-                    summaryData.forEach(d => {
-                        const listItem = document.createElement('li');
-                        listItem.className = 'py-2 flex justify-between items-center';
-                        listItem.innerHTML = `
-                            <div>
-                                <p class="text-sm font-medium text-gray-900">${d.description} (${d.date})</p>
-                                <p class="text-sm text-gray-500">${d.payee} [${d.costCenter}]</p>
-                            </div>
-                            <p class="text-sm font-medium text-gray-900">${parseFloat(d.price).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                        `;
-                        list.appendChild(listItem);
-                    });
-                    summaryDetailsList.appendChild(list);
-                }
-
-                // Budget Summary Table Logic
-                const budgetSummaryContainer = document.getElementById('budget-summary-container');
-                const budgetSummaryBody = document.getElementById('budget-summary-body');
-                const budgetSummaryTitle = document.getElementById('budget-summary-title');
-                const budgetColAnnual = document.getElementById('budget-col-annual');
-                const budgetColPeriod = document.getElementById('budget-col-period');
-                const budgetColSpent = document.getElementById('budget-col-spent');
-                
-                if ((summaryType === 'monthly' || summaryType === 'yearly') && selectedPeriod) {
-                    const currentUser = sessionStorage.getItem('currentUser');
-                    if (currentUser === '9012844') {
-                        budgetSummaryContainer.classList.remove('hidden');
-                    } else {
-                        budgetSummaryContainer.classList.add('hidden');
-                    }
-                    budgetSummaryBody.innerHTML = '';
-
-                    const isYearly = summaryType === 'yearly';
-                    budgetSummaryTitle.textContent = isYearly ? `สรุปงบประมาณรายบัญชี (ประจำปี ${selectedPeriod})` : `สรุปงบประมาณรายบัญชี (ประจำเดือน ${selectedPeriod})`;
-                    budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
-                    budgetColPeriod.innerHTML = isYearly ? 'งบประมาณ/ปี' : 'งบประมาณ/เดือน<br><span class="text-[9px]">(คิดเป็น 75% ของงบประมาณที่ได้รับ)</span>';
-                    budgetColSpent.textContent = isYearly ? 'เบิกจ่าย (ทั้งปี)' : 'เบิกจ่าย (เดือนนี้)';
-
-                    // Get unique account codes that have disbursements in the selected period
-                    const allRelevantCodes = [...new Set(summaryData.map(d => d.accountCode))].filter(c => c);
-
-                    allRelevantCodes.forEach(code => {
-                        const account = accountData.find(a => a.code === code);
-                        if (!account) return;
-
-                        // Calculate Budget based on Department Filter
-                        let annualBudgetForDept = 0;
-                        if (deptFilterValue === 'all') {
-                            annualBudgetForDept = Object.values(account.budgets).reduce((sum, b) => sum + b, 0);
-                        } else {
-                            annualBudgetForDept = account.budgets[deptFilterValue] || 0;
-                        }
-
-                        // Budget/Month is 75% of (Annual/12)
-                        const monthlyBudgetFull = annualBudgetForDept / 12;
-                        const monthlyBudget75 = monthlyBudgetFull * 0.75;
-                        
-                        // Displayed period budget (if yearly, show annual; if monthly, show 75% monthly)
-                        const periodBudgetDisplay = isYearly ? annualBudgetForDept : monthlyBudget75;
-
-                        // Spending for selected period (filtered by dept if needed)
-                        const periodSpent = summaryData
-                            .filter(d => d.accountCode === code)
-                            .reduce((sum, d) => sum + parseFloat(d.price), 0);
-
-                        // Total Spending for the year (filtered by dept if needed)
-                        let totalSpentYear = 0;
-                        const currentYear = selectedPeriod.substring(0, 4);
-                        if (isYearly) {
-                            totalSpentYear = periodSpent;
-                        } else {
-                            totalSpentYear = disbursements
-                                .filter(d => {
-                                    const codeMatch = d.accountCode === code;
-                                    const yearMatch = d.date.startsWith(currentYear);
-                                    const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
-                                    return codeMatch && yearMatch && deptMatch;
-                                })
-                                .reduce((sum, d) => sum + parseFloat(d.price), 0);
-                        }
-
-                        const remainingMonth = monthlyBudget75 - (isYearly ? (periodSpent / 12) : periodSpent);
-                        const remainingYear = annualBudgetForDept - totalSpentYear;
-                        
-                        // Threshold check: if spending in period exceeds the period budget (which is 75% if monthly)
-                        const isOverThreshold = periodSpent > periodBudgetDisplay;
-
-                        const row = document.createElement('tr');
-                        row.className = isOverThreshold ? 'bg-red-50' : '';
-                        row.innerHTML = `
-                            <td class="px-3 py-2 whitespace-nowrap">
-                                <div class="font-medium text-gray-900">${code}</div>
-                                <div class="text-[10px] text-gray-500 truncate max-w-[120px]">${account.name}</div>
-                            </td>
-                            <td class="px-3 py-2 text-right whitespace-nowrap">${annualBudgetForDept.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td class="px-3 py-2 text-right whitespace-nowrap">${periodBudgetDisplay.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td class="px-3 py-2 text-right whitespace-nowrap font-medium ${isOverThreshold ? 'text-red-600' : ''}">${periodSpent.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td class="px-3 py-2 text-right whitespace-nowrap font-medium ${remainingMonth < 0 ? 'text-red-600' : 'text-gray-700'}">${remainingMonth.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td class="px-3 py-2 text-right whitespace-nowrap font-medium ${remainingYear < 0 ? 'text-red-600' : 'text-gray-700'}">${remainingYear.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        `;
-                        budgetSummaryBody.appendChild(row);
-                    });
-
-                    if (budgetSummaryBody.innerHTML === '') {
-                        budgetSummaryBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">ไม่มีข้อมูลรหัสบัญชี</td></tr>';
-                    }
-                } else {
-                    budgetSummaryContainer.classList.add('hidden');
-                }
-            };
-
-            const renderTable = () => {
-                tableBody.innerHTML = '';
-                const filterValue = statusFilter.value;
-                const filteredData = disbursements.filter(d => filterValue === 'all' || d.status === filterValue);
-
-                if (filteredData.length === 0) {
-                    const colspan = sessionStorage.getItem('userRole') === 'admin' ? 8 : 7;
-                    tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-gray-500">ไม่พบรายการ</td></tr>`;
-                }
-
-                filteredData.forEach(d => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${d.date}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 font-medium">${d.accountCode || '-'}</div>
-                            <div class="text-xs text-gray-500">${d.costCenter || '-'}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 font-medium">${d.description}</div>
-                            <div class="text-xs text-gray-500">${d.accountName || ''}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${d.payee}</div>
-                            <div class="text-xs text-gray-500">${d.paymentMethod}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${parseFloat(d.netTotal).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                d.status === 'เสร็จสิ้น' ? 'bg-green-100 text-green-800' :
-                                d.status === 'กำลังดำเนินการ' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-gray-100 text-gray-800'
-                            }">
-                                ${d.status}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            ${d.attachment ? `<a href="${d.attachment}" target="_blank" class="text-indigo-600 hover:text-indigo-900 inline-flex items-center space-x-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h4"/><path d="M10 16h4"/><path d="M12 10v6"/></svg> <span>ดูไฟล์</span></a>` : 'ไม่มี'}
-                        </td>
-                        ${sessionStorage.getItem('userRole') === 'admin' ? `
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button class="edit-btn text-indigo-600 hover:text-indigo-900 inline-flex items-center space-x-1" data-id="${d.id}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                                <span>แก้ไข</span>
-                            </button>
-                            <button class="delete-btn text-red-600 hover:text-red-900 ml-4 inline-flex items-center space-x-1" data-id="${d.id}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                <span>ลบ</span>
-                            </button>
-                        </td>
-                        ` : ''}
-                    `;
-                    tableBody.appendChild(row);
-                });
-            };
-
-            const applyPermissions = () => {
-                const role = sessionStorage.getItem('userRole');
-                const currentUser = sessionStorage.getItem('currentUser');
-                const adminElements = document.querySelectorAll('.admin-only');
-                const superAdminElements = document.querySelectorAll('.super-admin-only');
-                const mainGrid = document.getElementById('main-grid');
-                const tableColumn = document.getElementById('table-column');
-
-                if (role === 'guest') {
-                    adminElements.forEach(el => el.classList.add('hidden'));
-                    superAdminElements.forEach(el => el.classList.add('hidden'));
-                    mainGrid.classList.remove('lg:grid-cols-3');
-                    mainGrid.classList.add('lg:grid-cols-1');
-                    tableColumn.classList.remove('lg:col-span-2');
-                } else { // admin
-                    adminElements.forEach(el => el.classList.remove('hidden'));
-                    
-                    if (currentUser === '9012844') {
-                        superAdminElements.forEach(el => el.classList.remove('hidden'));
-                    } else {
-                        superAdminElements.forEach(el => el.classList.add('hidden'));
-                    }
-
-                    mainGrid.classList.add('lg:grid-cols-3');
-                    mainGrid.classList.remove('lg:grid-cols-1');
-                    tableColumn.classList.add('lg:col-span-2');
-                }
-                renderTable(); // Re-render table to show/hide action column
-            };
-
-            const showApp = () => {
-                loginScreen.classList.add('hidden');
-                appContainer.classList.remove('hidden');
-                applyPermissions();
-            };
-
-            const showLogin = () => {
-                loginScreen.classList.remove('hidden');
-                appContainer.classList.add('hidden');
-            };
-
-            let users = JSON.parse(localStorage.getItem('users')) || [];
-            if (users.length === 0) {
-                users.push({ username: '9012844', password: 'PEATSG043' });
-                localStorage.setItem('users', JSON.stringify(users));
-            }
-
-            if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                showApp();
-            } else {
-                showLogin();
-            }
-
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const currentUsers = JSON.parse(localStorage.getItem('users')) || [];
-                const user = currentUsers.find(u => u.username === usernameInput.value && u.password === passwordInput.value);
-                if (user) {
-                    sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('currentUser', usernameInput.value);
-                    sessionStorage.setItem('userRole', 'admin');
-                    showApp();
-                    loginError.classList.add('hidden');
-                } else {
-                    loginError.classList.remove('hidden');
-                }
-            });
-
-            guestLoginBtn.addEventListener('click', () => {
-                sessionStorage.setItem('isLoggedIn', 'true');
-                sessionStorage.setItem('userRole', 'guest');
-                sessionStorage.removeItem('currentUser'); // Ensure no admin user is set
-                showApp();
-            });
-
-            const headerLogoutBtn = document.getElementById('header-logout-btn');
-            headerLogoutBtn.addEventListener('click', () => {
-                sessionStorage.clear();
-                // Reset layout to default before showing login
-                const mainGrid = document.getElementById('main-grid');
-                const tableColumn = document.getElementById('table-column');
-                mainGrid.classList.add('lg:grid-cols-3');
-                mainGrid.classList.remove('lg:grid-cols-1');
-                tableColumn.classList.add('lg:col-span-2');
-                showLogin();
-            });
-
-            const calculateAmounts = () => {
-                const price = parseFloat(priceInput.value) || 0;
-                const tax = parseFloat(taxInput.value) || 0;
-                const wht = parseFloat(whtInput.value) || 0;
-
-                const totalWithVat = price + (price * tax / 100);
-                const whtAmount = price * wht / 100; // หัก ณ ที่จ่ายคิดจากฐานราคาก่อน VAT
-                const netTotal = totalWithVat - whtAmount;
-
-                totalPriceInput.value = totalWithVat.toFixed(2);
-                netTotalInput.value = netTotal.toFixed(2);
-                updateBudgetInfo();
-            };
-
-            priceInput.addEventListener('input', calculateAmounts);
-            taxInput.addEventListener('input', calculateAmounts);
-            whtInput.addEventListener('input', calculateAmounts);
-
-
-
-            const populatePayeeFilter = () => {
-                const payees = [...new Set(disbursements.map(d => d.payee))];
-                summaryPayee.innerHTML = '<option value="">-- เลือกผู้รับเงิน --</option>';
-                payees.sort().forEach(payee => {
-                    const option = document.createElement('option');
-                    option.value = payee;
-                    option.textContent = payee;
-                    summaryPayee.appendChild(option);
-                });
-            };
-
-            const resetForm = () => {
-                form.reset();
-                disbursementIdInput.value = '';
-                totalPriceInput.value = '';
-                netTotalInput.value = '';
-                attachmentInput.value = '';
-                attachmentNameDisplay.textContent = '';
-                attachmentContainer.classList.add('hidden');
-                budgetInfo.classList.add('hidden');
-                document.querySelector('input[name="status"][value="กำลังดำเนินการ"]').checked = true;
-                formTitle.textContent = 'บันทึกข้อมูล';
-                submitBtn.textContent = 'บันทึก';
-                cancelBtn.style.display = 'none';
-            };
-
-            const handleStatusChange = () => {
-                const selectedStatus = document.querySelector('input[name="status"]:checked').value;
-                if (selectedStatus === 'เสร็จสิ้น') {
-                    attachmentContainer.classList.remove('hidden');
-                } else {
-                    attachmentContainer.classList.add('hidden');
-                    attachmentInput.value = ''; // Clear file input if status is not 'เสร็จสิ้น'
-                    attachmentNameDisplay.textContent = '';
-                }
-            };
-
-            statusRadios.forEach(radio => radio.addEventListener('change', handleStatusChange));
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const id = disbursementIdInput.value;
-                const selectedStatus = document.querySelector('input[name="status"]:checked').value;
-                const existingDisbursement = id ? disbursements.find(d => d.id === id) : null;
-
-                let finalAttachmentData = null;
-                let finalAttachmentName = null;
-
-                const file = attachmentInput.files[0];
-
-                if (selectedStatus === 'เสร็จสิ้น') {
-                    if (file) {
-                        // New file uploaded, validate and process it
-                        if (file.type !== 'application/pdf') {
-                            alert('กรุณาเลือกไฟล์ PDF เท่านั้น');
-                            return;
-                        }
-                        if (file.size > 5 * 1024 * 1024) { // 5 MB
-                            alert('ขนาดไฟล์ต้องไม่เกิน 5 MB');
-                            return;
-                        }
-                        finalAttachmentData = await new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = event => resolve(event.target.result);
-                            reader.onerror = error => reject(error);
-                            reader.readAsDataURL(file);
-                        });
-                        finalAttachmentName = file.name;
-                    } else if (existingDisbursement) {
-                        // No new file, but we are editing, so keep the old one
-                        finalAttachmentData = existingDisbursement.attachment;
-                        finalAttachmentName = existingDisbursement.attachmentName;
-                    }
-                }
-                // If status is not 'เสร็จสิ้น', finalAttachmentData and finalAttachmentName remain null, correctly clearing them.
-
-                const disbursementData = {
-                    id: id || Date.now().toString(),
-                    accountCode: accountCodeInput.value,
-                    accountName: accountNameInput.value,
-                    costCenter: costCenterInput.value,
-                    date: document.getElementById('date').value,
-                    description: document.getElementById('description').value,
-                    price: document.getElementById('price').value,
-                    tax: document.getElementById('tax').value,
-                    totalPrice: document.getElementById('total-price').value,
-                    wht: document.getElementById('wht').value,
-                    netTotal: document.getElementById('net-total').value,
-                    payee: document.getElementById('payee').value,
-                    paymentMethod: document.getElementById('payment-method').value,
-                    status: selectedStatus,
-                    attachment: finalAttachmentData,
-                    attachmentName: finalAttachmentName
-                };
-
-                if (id) {
-                    const index = disbursements.findIndex(d => d.id === id);
-                    if (index !== -1) {
-                        disbursements[index] = disbursementData;
-                    }
-                } else {
-                    disbursements.push(disbursementData);
-                }
-
-                localStorage.setItem('disbursements', JSON.stringify(disbursements));
-                resetForm();
-                renderTable();
-                populatePayeeFilter();
-            });
-
-            const deleteConfirmModal = document.getElementById('delete-confirm-modal');
-            const deleteConfirmMessage = document.getElementById('delete-confirm-message');
-            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-            const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-            let deleteAction = null;
-
-            const showDeleteConfirm = (message, action) => {
-                deleteConfirmMessage.textContent = message;
-                deleteAction = action;
-                deleteConfirmModal.classList.remove('hidden');
-            };
-
-            confirmDeleteBtn.addEventListener('click', () => {
-                if (deleteAction) {
-                    deleteAction();
-                    deleteConfirmModal.classList.add('hidden');
-                    deleteAction = null;
-                }
-            });
-
-            cancelDeleteBtn.addEventListener('click', () => {
-                deleteConfirmModal.classList.add('hidden');
-                deleteAction = null;
-            });
-
-            tableBody.addEventListener('click', (e) => {
-                const editBtn = e.target.closest('.edit-btn');
-                if (editBtn) {
-                    const id = editBtn.dataset.id;
-                    const disbursement = disbursements.find(d => d.id === id);
-                    if (!disbursement) return;
-
-                    document.getElementById('disbursement-id').value = disbursement.id;
-                    accountCodeInput.value = disbursement.accountCode || '';
-                    accountNameInput.value = disbursement.accountName || '';
-                    costCenterInput.value = disbursement.costCenter || '';
-                    document.getElementById('date').value = disbursement.date;
-                    document.getElementById('description').value = disbursement.description;
-                    document.getElementById('price').value = disbursement.price;
-                    document.getElementById('tax').value = disbursement.tax;
-                    document.getElementById('wht').value = disbursement.wht;
-                    calculateAmounts();
-                    updateBudgetInfo();
-                    document.getElementById('payee').value = disbursement.payee;
-                    document.getElementById('payment-method').value = disbursement.paymentMethod;
-                    document.querySelector(`input[name="status"][value="${disbursement.status}"]`).checked = true;
-                    
-                    handleStatusChange();
-                    attachmentNameDisplay.textContent = disbursement.attachmentName ? `ไฟล์ปัจจุบัน: ${disbursement.attachmentName}` : '';
-                    attachmentInput.value = ''; // Clear file input
-
-                    formTitle.textContent = 'แก้ไขรายการ';
-                    submitBtn.textContent = 'อัปเดต';
-                    cancelBtn.style.display = 'inline-flex';
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-
-                const deleteBtn = e.target.closest('.delete-btn');
-                if (deleteBtn) {
-                    const id = deleteBtn.dataset.id;
-                    showDeleteConfirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?', () => {
-                        disbursements = disbursements.filter(d => d.id !== id);
-                        localStorage.setItem('disbursements', JSON.stringify(disbursements));
-                        renderTable();
-                        populatePayeeFilter();
-                    });
-                }
-            });
-            
-
-
-            cancelBtn.addEventListener('click', resetForm);
-
-            statusFilter.addEventListener('change', renderTable);
-
-            summaryTypeFilter.addEventListener('change', () => {
-                dailyFilterContainer.classList.add('hidden');
-                monthlyFilterContainer.classList.add('hidden');
-                yearlyFilterContainer.classList.add('hidden');
-                payeeFilterContainer.classList.add('hidden');
-                switch (summaryTypeFilter.value) {
-                    case 'daily': dailyFilterContainer.classList.remove('hidden'); break;
-                    case 'monthly': monthlyFilterContainer.classList.remove('hidden'); break;
-                    case 'yearly': yearlyFilterContainer.classList.remove('hidden'); break;
-                    case 'payee': payeeFilterContainer.classList.remove('hidden'); break;
-                }
-                updateSummary();
-            });
-
-            [summaryDate, summaryMonth, summaryYear, summaryPayee, summaryDeptFilter].forEach(el => el.addEventListener('change', updateSummary));
-
-            const exportToCsv = (filename, rows) => {
-                const header = ["วันที่", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
-                const csvContent = [header.join(','), ...rows.map(row => 
-                    [
-                        `"${row.date}"`,
-                        `"${row.accountCode || ''}"`,
-                        `"${row.accountName || ''}"`,
-                        `"${row.costCenter || ''}"`,
-                        `"${row.description}"`,
-                        row.price,
-                        row.tax,
-                        row.totalPrice,
-                        row.wht,
-                        row.netTotal,
-                        `"${row.payee}"`,
-                        `"${row.paymentMethod}"`,
-                        `"${row.status}"`
-                    ].join(',')
-                )].join('\n');
-
-                const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                if (link.download !== undefined) { 
-                    const url = URL.createObjectURL(blob);
-                    link.setAttribute("href", url);
-                    link.setAttribute("download", filename);
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-            };
-
-            exportBtnHeader.addEventListener('click', () => {
-                const mainFilterValue = statusFilter.value;
-                let dataToExport = disbursements.filter(d => mainFilterValue === 'all' || d.status === mainFilterValue);
-                exportToCsv('disbursements.csv', dataToExport);
-            });
-
-            renderTable();
-            populatePayeeFilter();
-            populateAccountDatalist();
-
-
-            // Settings Modal Logic
-            const settingsBtn = document.getElementById('settings-btn');
-            const settingsModal = document.getElementById('settings-modal');
-            const closeSettingsBtn = document.getElementById('close-settings-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const changePasswordForm = document.getElementById('change-password-form');
-            const addUserForm = document.getElementById('add-user-form');
-
-            settingsBtn.addEventListener('click', () => {
-                applyPermissions(); // Ensure permissions are applied to settings modal elements
-                const currentUser = sessionStorage.getItem('currentUser');
-                if (currentUser === '9012844') {
-                    renderSuperAdminUserList();
-                }
-                settingsModal.classList.remove('hidden');
-            });
-
-            const renderSuperAdminUserList = () => {
-                const userListEl = document.getElementById('super-admin-user-list');
-                const users = JSON.parse(localStorage.getItem('users')) || [];
-                userListEl.innerHTML = '';
-                
-                users.forEach((user, index) => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-4 py-2 font-medium">${user.username}</td>
-                        <td class="px-4 py-2">
-                            <input type="text" class="super-admin-password-input border rounded px-2 py-1 w-full" value="${user.password}" data-index="${index}">
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            <button class="super-admin-save-btn text-green-600 hover:text-green-900 font-medium" data-index="${index}">บันทึก</button>
-                            ${user.username !== '9012844' ? `<button class="super-admin-delete-btn text-red-600 hover:text-red-900 ml-2 font-medium" data-index="${index}">ลบ</button>` : ''}
-                        </td>
-                    `;
-                    userListEl.appendChild(row);
-                });
-            };
-
-            document.getElementById('super-admin-user-list').addEventListener('click', (e) => {
-                const users = JSON.parse(localStorage.getItem('users')) || [];
-                const index = parseInt(e.target.dataset.index);
-
-                if (e.target.classList.contains('super-admin-save-btn')) {
-                    const passwordInput = document.querySelector(`.super-admin-password-input[data-index="${index}"]`);
-                    users[index].password = passwordInput.value;
-                    localStorage.setItem('users', JSON.stringify(users));
-                    alert('บันทึกรหัสผ่านใหม่สำเร็จ');
-                    renderSuperAdminUserList();
-                } else if (e.target.classList.contains('super-admin-delete-btn')) {
-                    showDeleteConfirm(`ยืนยันการลบผู้ใช้ ${users[index].username}?`, () => {
-                        users.splice(index, 1);
-                        localStorage.setItem('users', JSON.stringify(users));
-                        renderSuperAdminUserList();
-                    });
-                }
-            });
-
-            closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-
-            logoutBtn.addEventListener('click', () => {
-                sessionStorage.clear();
-                showLogin();
-            });
-
-            changePasswordForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const currentUser = sessionStorage.getItem('currentUser');
-                const currentPassword = document.getElementById('current-password').value;
-                const newPassword = document.getElementById('new-password').value;
-                const feedbackEl = document.getElementById('password-change-feedback');
-
-                let users = JSON.parse(localStorage.getItem('users')) || [];
-                const userIndex = users.findIndex(u => u.username === currentUser);
-
-                if (userIndex === -1 || users[userIndex].password !== currentPassword) {
-                    feedbackEl.textContent = 'รหัสผ่านปัจจุบันไม่ถูกต้อง';
-                    feedbackEl.className = 'text-red-500 text-sm text-center mt-2';
-                    return;
-                }
-
-                users[userIndex].password = newPassword;
-                localStorage.setItem('users', JSON.stringify(users));
-                feedbackEl.textContent = 'เปลี่ยนรหัสผ่านสำเร็จแล้ว';
-                feedbackEl.className = 'text-green-600 text-sm text-center mt-2';
-                changePasswordForm.reset();
-            });
-
-            addUserForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const newUsername = document.getElementById('new-username').value;
-                const newUserPassword = document.getElementById('new-user-password').value;
-                const feedbackEl = document.getElementById('add-user-feedback');
-
-                let users = JSON.parse(localStorage.getItem('users')) || [];
-                if (users.some(u => u.username === newUsername)) {
-                    feedbackEl.textContent = 'ชื่อผู้ใช้นี้มีอยู่แล้ว';
-                    feedbackEl.className = 'text-red-500 text-sm text-center mt-2';
-                    return;
-                }
-
-                users.push({ username: newUsername, password: newUserPassword });
-                localStorage.setItem('users', JSON.stringify(users));
-                feedbackEl.textContent = 'เพิ่มผู้ใช้งานสำเร็จแล้ว';
-                feedbackEl.className = 'text-green-600 text-sm text-center mt-2';
-                addUserForm.reset();
-            });
-            // Account Management Logic
-            const accountMgmtForm = document.getElementById('account-mgmt-form');
-            const mgmtAccountIndex = document.getElementById('mgmt-account-index');
-            const mgmtAccountCode = document.getElementById('mgmt-account-code');
-            const mgmtAccountName = document.getElementById('mgmt-account-name');
-            const mgmtBudgetผบง = document.getElementById('mgmt-budget-ผบง');
-            const mgmtBudgetกบห = document.getElementById('mgmt-budget-กบห');
-            const mgmtBudgetผปร = document.getElementById('mgmt-budget-ผปร');
-            const mgmtBudgetผบค = document.getElementById('mgmt-budget-ผบค');
-            const mgmtAccountSubmit = document.getElementById('mgmt-account-submit');
-            const mgmtAccountCancel = document.getElementById('mgmt-account-cancel');
-            const mgmtAccountList = document.getElementById('mgmt-account-list');
-
-            const renderMgmtAccountList = () => {
-                mgmtAccountList.innerHTML = '';
-                accountData.forEach((acc, index) => {
-                    const totalBudget = Object.values(acc.budgets).reduce((sum, b) => sum + b, 0);
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-4 py-2 font-medium">${acc.code}</td>
-                        <td class="px-4 py-2 truncate max-w-[150px]">${acc.name}</td>
-                        <td class="px-4 py-2 text-right">${totalBudget.toLocaleString()}</td>
-                        <td class="px-4 py-2 text-center space-x-2">
-                            <button class="edit-acc-btn text-indigo-600 hover:text-indigo-900" data-index="${index}">แก้ไข</button>
-                            <button class="delete-acc-btn text-red-600 hover:text-red-900" data-index="${index}">ลบ</button>
-                        </td>
-                    `;
-                    mgmtAccountList.appendChild(row);
-                });
-            };
-
-            const resetMgmtForm = () => {
-                accountMgmtForm.reset();
-                mgmtAccountIndex.value = "-1";
-                mgmtAccountSubmit.textContent = "บันทึกรหัสบัญชี";
-                mgmtAccountCancel.classList.add('hidden');
-            };
-
-            accountMgmtForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const index = parseInt(mgmtAccountIndex.value);
-                const newAccount = {
-                    code: mgmtAccountCode.value,
-                    name: mgmtAccountName.value,
-                    budgets: {
-                        "ผบง.": parseFloat(mgmtBudgetผบง.value) || 0,
-                        "กบห.": parseFloat(mgmtBudgetกบห.value) || 0,
-                        "ผปร.": parseFloat(mgmtBudgetผปร.value) || 0,
-                        "ผบค.": parseFloat(mgmtBudgetผบค.value) || 0
-                    }
-                };
-
-                if (index === -1) {
-                    accountData.push(newAccount);
-                } else {
-                    accountData[index] = newAccount;
-                }
-
-                localStorage.setItem('accountData', JSON.stringify(accountData));
-                renderMgmtAccountList();
-                populateAccountDatalist();
-                resetMgmtForm();
-                updateSummary();
-            });
-
-            mgmtAccountList.addEventListener('click', (e) => {
-                if (e.target.classList.contains('edit-acc-btn')) {
-                    const index = parseInt(e.target.dataset.index);
-                    const acc = accountData[index];
-                    mgmtAccountIndex.value = index;
-                    mgmtAccountCode.value = acc.code;
-                    mgmtAccountName.value = acc.name;
-                    mgmtBudgetผบง.value = acc.budgets["ผบง."] || 0;
-                    mgmtBudgetกบห.value = acc.budgets["กบห."] || 0;
-                    mgmtBudgetผปร.value = acc.budgets["ผปร."] || 0;
-                    mgmtBudgetผบค.value = acc.budgets["ผบค."] || 0;
-                    mgmtAccountSubmit.textContent = "อัปเดตรหัสบัญชี";
-                    mgmtAccountCancel.classList.remove('hidden');
-                    accountMgmtForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } else if (e.target.classList.contains('delete-acc-btn')) {
-                    const index = parseInt(e.target.dataset.index);
-                    showDeleteConfirm('คุณแน่ใจหรือไม่ว่าต้องการลบรหัสบัญชีนี้?', () => {
-                        accountData.splice(index, 1);
-                        localStorage.setItem('accountData', JSON.stringify(accountData));
-                        renderMgmtAccountList();
-                        populateAccountDatalist();
-                        updateSummary();
-                    });
-                }
-            });
-
-            mgmtAccountCancel.addEventListener('click', resetMgmtForm);
-            
-            // Initial render
-            renderMgmtAccountList();
-
-            // Password Toggle Logic
-            const togglePasswordBtn = document.getElementById('toggle-password-btn');
-            const eyeIcon = document.getElementById('eye-icon');
-            const eyeOffIcon = document.getElementById('eye-off-icon');
-
-            togglePasswordBtn.addEventListener('click', () => {
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    eyeIcon.classList.add('hidden');
-                    eyeOffIcon.classList.remove('hidden');
-                } else {
-                    passwordInput.type = 'password';
-                    eyeIcon.classList.remove('hidden');
-                    eyeOffIcon.classList.add('hidden');
-                }
-            });
-        });
-    </script>
-
-</body>
-</div>
-
-    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-2xl shadow-lg w-full max-w-2xl text-black max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="text-xl font-bold">ตั้งค่า</h3>
@@ -1398,7 +447,6 @@
         </div>
     </div>
 
+    <script type="module" src="/src/app.ts"></script>
 </body>
 </html>
-
-

@@ -1,19 +1,8 @@
 {
   "entities": {
-    "Account": {
-      "title": "Account",
-      "description": "Budget account information",
-      "type": "object",
-      "properties": {
-        "code": { "type": "string", "description": "Account code" },
-        "name": { "type": "string", "description": "Account name" },
-        "budgets": { "type": "object", "description": "Budgets per cost center" }
-      },
-      "required": ["code", "name", "budgets"]
-    },
-    "Disbursement": {
+    "disbursement": {
       "title": "Disbursement",
-      "description": "Disbursement record",
+      "description": "A record of a budget disbursement",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -30,33 +19,55 @@
         "payee": { "type": "string" },
         "paymentMethod": { "type": "string" },
         "status": { "type": "string" },
-        "attachment": { "type": "string" },
-        "attachmentName": { "type": "string" }
+        "attachment": { "type": "string", "description": "Base64 encoded PDF or URL" },
+        "attachmentName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "date", "description", "price", "payee", "status"]
+      "required": ["accountCode", "costCenter", "date", "description", "price", "payee", "status"]
     },
-    "User": {
-      "title": "User",
-      "description": "User account",
+    "account": {
+      "title": "Account",
+      "description": "Account code and budget allocation",
       "type": "object",
       "properties": {
-        "password": { "type": "string" },
-        "role": { "type": "string" }
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "budgets": {
+          "type": "object",
+          "properties": {
+            "ผบง.": { "type": "number" },
+            "กบห.": { "type": "number" },
+            "ผปร.": { "type": "number" },
+            "ผบค.": { "type": "number" }
+          }
+        }
       },
-      "required": ["password"]
+      "required": ["code", "name", "budgets"]
+    },
+    "user": {
+      "title": "User",
+      "description": "Application user account",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "guest"] }
+      },
+      "required": ["username", "password"]
     }
   },
   "firestore": {
-    "accounts/{code}": {
-      "schema": "Account",
-      "description": "Collection of budget accounts"
-    },
-    "disbursements/{id}": {
-      "schema": "Disbursement",
+    "/disbursements/{disbursementId}": {
+      "schema": "disbursement",
       "description": "Collection of disbursement records"
     },
-    "users/{username}": {
-      "schema": "User",
+    "/accounts/{accountId}": {
+      "schema": "account",
+      "description": "Collection of account codes and budgets"
+    },
+    "/users/{userId}": {
+      "schema": "user",
       "description": "Collection of user accounts"
     }
   }

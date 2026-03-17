@@ -1,19 +1,26 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, signInWithPopup, onAuthStateChanged, signOut, 
-  signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword 
-} from 'firebase/auth';
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, getDocFromServer } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, query, where, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
-export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+export const googleProvider = new GoogleAuthProvider();
 
 export { 
-  signInWithPopup, onAuthStateChanged, signOut, 
-  signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, getDocFromServer 
+  signInWithPopup, 
+  onAuthStateChanged, 
+  signOut,
+  collection, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  onSnapshot, 
+  query, 
+  where, 
+  deleteDoc, 
+  updateDoc, 
+  serverTimestamp 
 };
-
-// Test connection removed - handled in main.ts
