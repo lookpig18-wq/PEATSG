@@ -28,6 +28,7 @@ interface Disbursement {
 interface Account {
   code: string;
   name: string;
+  importantType?: 'none' | 'operating' | '7categories';
   budgets: {
     [key: string]: number;
   };
@@ -73,12 +74,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const yearlyFilterContainer = document.getElementById('yearly-filter-container')!;
     const summaryYear = document.getElementById('summary-year') as HTMLSelectElement;
     const summaryDeptFilter = document.getElementById('summary-dept-filter') as HTMLSelectElement;
+    const summaryCategoryFilter = document.getElementById('summary-category-filter') as HTMLSelectElement;
     const payeeFilterContainer = document.getElementById('payee-filter-container')!;
     const summaryPayee = document.getElementById('summary-payee') as HTMLSelectElement;
     const attachmentContainer = document.getElementById('attachment-container')!;
     const attachmentInput = document.getElementById('attachment') as HTMLInputElement;
     const attachmentNameDisplay = document.getElementById('attachment-name')!;
     const statusRadios = document.querySelectorAll('input[name="status"]') as NodeListOf<HTMLInputElement>;
+
+    // Tab Elements
+    const tabEntryBtn = document.getElementById('tab-entry-btn')!;
+    const tabSummaryBtn = document.getElementById('tab-summary-btn')!;
+    const tabEntryContent = document.getElementById('tab-entry-content')!;
+    const tabSummaryContent = document.getElementById('tab-summary-content')!;
+
+    // Tab Logic
+    tabEntryBtn.addEventListener('click', () => {
+        tabEntryContent.classList.remove('hidden');
+        tabSummaryContent.classList.add('hidden');
+        
+        tabEntryBtn.classList.add('bg-white', 'text-indigo-900', 'shadow-md');
+        tabEntryBtn.classList.remove('text-white', 'hover:bg-white/10');
+        
+        tabSummaryBtn.classList.remove('bg-white', 'text-indigo-900', 'shadow-md');
+        tabSummaryBtn.classList.add('text-white', 'hover:bg-white/10');
+    });
+
+    tabSummaryBtn.addEventListener('click', () => {
+        tabEntryContent.classList.add('hidden');
+        tabSummaryContent.classList.remove('hidden');
+        
+        tabSummaryBtn.classList.add('bg-white', 'text-indigo-900', 'shadow-md');
+        tabSummaryBtn.classList.remove('text-white', 'hover:bg-white/10');
+        
+        tabEntryBtn.classList.remove('bg-white', 'text-indigo-900', 'shadow-md');
+        tabEntryBtn.classList.add('text-white', 'hover:bg-white/10');
+    });
 
     const accountCodeInput = document.getElementById('account-code') as HTMLInputElement;
     const accountNameInput = document.getElementById('account-name') as HTMLInputElement;
@@ -96,52 +127,52 @@ document.addEventListener('DOMContentLoaded', () => {
     let users: User[] = [];
 
     const defaultAccountData: Account[] = [
-        { code: "52010030", name: "ค่าล่วงเวลาพนักงาน", budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 480000, "ผบค.": 370000 } },
-        { code: "52010100", name: "ค่าล่วงเวลา - ลูกจ้าง", budgets: { "ผบง.": 26000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "52010990", name: "ค่าตอบแทนอื่น-พนักงาน", budgets: { "ผบง.": 7000, "กบห.": 8500, "ผปร.": 7000, "ผบค.": 7000 } },
-        { code: "52012020", name: "เงินเพิ่มฮอทไลน์", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 62000, "ผบค.": 0 } },
-        { code: "52012070", name: "ค่าโทรศัพท์เคลื่อนที่-ผู้บริหาร", budgets: { "ผบง.": 0, "กบห.": 12000, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "52020030", name: "เงินช่วยเหลือค่าเล่าเรียนบุตร", budgets: { "ผบง.": 6000, "กบห.": 0, "ผปร.": 0, "ผบค.": 26000 } },
-        { code: "52020990", name: "เงินช่วยเหลืออื่น", budgets: { "ผบง.": 4500, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "52022010", name: "ค่าพาหนะเดินทางไปปฏิบัติงานต่างท้องที่-พนักงาน", budgets: { "ผบง.": 500, "กบห.": 500, "ผปร.": 500, "ผบค.": 500 } },
-        { code: "52022020", name: "ค่าเบี้ยเลี้ยง-พนักงาน", budgets: { "ผบง.": 20000, "กบห.": 23000, "ผปร.": 22000, "ผบค.": 22000 } },
-        { code: "52022030", name: "ค่าที่พัก-พนักงาน", budgets: { "ผบง.": 35000, "กบห.": 39000, "ผปร.": 35000, "ผบค.": 35000 } },
-        { code: "52022050", name: "ค่าชดเชยการใช้ยานพาหนะส่วนตัว", budgets: { "ผบง.": 37000, "กบห.": 10000, "ผปร.": 37000, "ผบค.": 37000 } },
-        { code: "52029010", name: "ค่าเช่าบ้าน", budgets: { "ผบง.": 72000, "กบห.": 72000, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53010020", name: "ค่าตอบแทน-การจดหน่วยและแจ้งหนี้กระแสไฟฟ้า", budgets: { "ผบง.": 1740000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53010070", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันงานบำรุงรักษา", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 1250000, "ผบค.": 0 } },
-        { code: "53010080", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันงานบริการ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 660000 } },
-        { code: "53010090", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันทั่วไป", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 370000, "ผบค.": 0 } },
-        { code: "53019990", name: "ค่าตอบแทนอื่น ๆ", budgets: { "ผบง.": 5000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53021010", name: "ค่าป้ายประชาสัมพันธ์", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 4500 } },
-        { code: "53021020", name: "ค่าประชาสัมพันธ์อื่น", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 15000 } },
-        { code: "53021030", name: "ค่าประชาสัมพันธ์ทางสื่อ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 1000 } },
-        { code: "53030010", name: "ค่าวัสดุสำนักงาน", budgets: { "ผบง.": 65000, "กบห.": 0, "ผปร.": 65000, "ผบค.": 65000 } },
-        { code: "53030030", name: "ค่าวัสดุเบ็ดเตล็ด", budgets: { "ผบง.": 38000, "กบห.": 0, "ผปร.": 7000, "ผบค.": 7000 } },
-        { code: "53031010", name: "ค่าน้ำดื่ม", budgets: { "ผบง.": 5600, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53031020", name: "ค่าน้ำประปา", budgets: { "ผบง.": 27000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53032010", name: "ค่าใช้บริการโทรศัพท์", budgets: { "ผบง.": 20000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53032020", name: "ค่าบำรุงรักษาคู่สายโทรศัพท์", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53032060", name: "ค่าไปรษณีย์โทรเลข", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53032080", name: "ค่าใช้จ่ายในการใช้อินเตอร์เน็ต", budgets: { "ผบง.": 8400, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53034010", name: "ค่าจ้างเหมาทำความสะอาด", budgets: { "ผบง.": 220000, "กบห.": 0, "ผปร.": 26400, "ผบค.": 0 } },
-        { code: "53034030", name: "ค่าจ้างบำรุงรักษาสวน", budgets: { "ผบง.": 72000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53034040", name: "ค่าบำรุงรักษาบริเวณสำนักงาน", budgets: { "ผบง.": 38000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53039010", name: "เชื้อเพลิงยานพาหนะ", budgets: { "ผบง.": 92000, "กบห.": 97000, "ผปร.": 460000, "ผบค.": 155000 } },
-        { code: "53039990", name: "ค่าใช้จ่ายเบ็ดเตล็ด", budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53051040", name: "ค่าซ่อมแซมบำรุงรักษา-อาคาร", budgets: { "ผบง.": 175000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53051050", name: "ค่าซ่อมแซมบำรุงรักษา-ยานพาหนะ", budgets: { "ผบง.": 10000, "กบห.": 0, "ผปร.": 140000, "ผบค.": 30000 } },
-        { code: "53051060", name: "ค่าซ่อมแซมบำรุงรักษา-คอมฯ&อุปกรณ์ประกอบคอมฯ", budgets: { "ผบง.": 30000, "กบห.": 0, "ผปร.": 30000, "ผบค.": 30000 } },
-        { code: "53051090", name: "ค่าวัสดุเบ็ดเตล็ด ด้านช่าง", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 15000, "ผบค.": 15000 } },
-        { code: "53051100", name: "ค่าซ่อมแซมบำรุงรักษาอุปกรณ์ในสำนักงาน", budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 20000, "ผบค.": 20000 } },
-        { code: "53051990", name: "ค่าซ่อมแซมบำรุงรักษาอื่น ๆ", budgets: { "ผบง.": 10000, "กบห.": 0, "ผปร.": 10000, "ผบค.": 10000 } },
-        { code: "53062020", name: "ค่าเบี้ยประกัน-ยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 20000, "ผบค.": 0 } },
-        { code: "53064010", name: "ค่าภาษีที่ดินฯ", budgets: { "ผบง.": 30000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53064020", name: "ค่าภาษีและค่าธรรมเนียมยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 30000, "ผบค.": 0 } },
-        { code: "53069020", name: "ค่าขนส่งขนย้าย", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 1000, "ผบค.": 0 } },
-        { code: "53069070", name: "ค่าธรรมเนียมธนาคาร", budgets: { "ผบง.": 9000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
-        { code: "53069110", name: "ค่าตรวจสภาพยานพาหนะ", budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 2500, "ผบค.": 0 } },
-        { code: "53069990", name: "ค่าใช้จ่ายอื่น", budgets: { "ผบง.": 80000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } }
+        { code: "52010030", name: "ค่าล่วงเวลาพนักงาน", importantType: 'operating', budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 480000, "ผบค.": 370000 } },
+        { code: "52010100", name: "ค่าล่วงเวลา - ลูกจ้าง", importantType: 'none', budgets: { "ผบง.": 26000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "52010990", name: "ค่าตอบแทนอื่น-พนักงาน", importantType: 'none', budgets: { "ผบง.": 7000, "กบห.": 8500, "ผปร.": 7000, "ผบค.": 7000 } },
+        { code: "52012020", name: "เงินเพิ่มฮอทไลน์", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 62000, "ผบค.": 0 } },
+        { code: "52012070", name: "ค่าโทรศัพท์เคลื่อนที่-ผู้บริหาร", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 12000, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "52020030", name: "เงินช่วยเหลือค่าเล่าเรียนบุตร", importantType: 'none', budgets: { "ผบง.": 6000, "กบห.": 0, "ผปร.": 0, "ผบค.": 26000 } },
+        { code: "52020990", name: "เงินช่วยเหลืออื่น", importantType: 'none', budgets: { "ผบง.": 4500, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "52022010", name: "ค่าพาหนะเดินทางไปปฏิบัติงานต่างท้องที่-พนักงาน", importantType: 'operating', budgets: { "ผบง.": 500, "กบห.": 500, "ผปร.": 500, "ผบค.": 500 } },
+        { code: "52022020", name: "ค่าเบี้ยเลี้ยง-พนักงาน", importantType: 'operating', budgets: { "ผบง.": 20000, "กบห.": 23000, "ผปร.": 22000, "ผบค.": 22000 } },
+        { code: "52022030", name: "ค่าที่พัก-พนักงาน", importantType: 'operating', budgets: { "ผบง.": 35000, "กบห.": 39000, "ผปร.": 35000, "ผบค.": 35000 } },
+        { code: "52022050", name: "ค่าชดเชยการใช้ยานพาหนะส่วนตัว", importantType: 'operating', budgets: { "ผบง.": 37000, "กบห.": 10000, "ผปร.": 37000, "ผบค.": 37000 } },
+        { code: "52029010", name: "ค่าเช่าบ้าน", importantType: 'none', budgets: { "ผบง.": 72000, "กบห.": 72000, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53010020", name: "ค่าตอบแทน-การจดหน่วยและแจ้งหนี้กระแสไฟฟ้า", importantType: 'operating', budgets: { "ผบง.": 1740000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53010070", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันงานบำรุงรักษา", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 1250000, "ผบค.": 0 } },
+        { code: "53010080", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันงานบริการ", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 660000 } },
+        { code: "53010090", name: "ค่าแรง/ค่าจ้างเหมาคนงานรายวันทั่วไป", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 370000, "ผบค.": 0 } },
+        { code: "53019990", name: "ค่าตอบแทนอื่น ๆ", importantType: 'none', budgets: { "ผบง.": 5000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53021010", name: "ค่าป้ายประชาสัมพันธ์", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 4500 } },
+        { code: "53021020", name: "ค่าประชาสัมพันธ์อื่น", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 15000 } },
+        { code: "53021030", name: "ค่าประชาสัมพันธ์ทางสื่อ", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 0, "ผบค.": 1000 } },
+        { code: "53030010", name: "ค่าวัสดุสำนักงาน", importantType: 'operating', budgets: { "ผบง.": 65000, "กบห.": 0, "ผปร.": 65000, "ผบค.": 65000 } },
+        { code: "53030030", name: "ค่าวัสดุเบ็ดเตล็ด", importantType: 'none', budgets: { "ผบง.": 38000, "กบห.": 0, "ผปร.": 7000, "ผบค.": 7000 } },
+        { code: "53031010", name: "ค่าน้ำดื่ม", importantType: 'none', budgets: { "ผบง.": 5600, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53031020", name: "ค่าน้ำประปา", importantType: 'none', budgets: { "ผบง.": 27000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53032010", name: "ค่าใช้บริการโทรศัพท์", importantType: 'none', budgets: { "ผบง.": 20000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53032020", name: "ค่าบำรุงรักษาคู่สายโทรศัพท์", importantType: 'none', budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53032060", name: "ค่าไปรษณีย์โทรเลข", importantType: 'none', budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53032080", name: "ค่าใช้จ่ายในการใช้อินเตอร์เน็ต", importantType: 'none', budgets: { "ผบง.": 8400, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53034010", name: "ค่าจ้างเหมาทำความสะอาด", importantType: 'none', budgets: { "ผบง.": 220000, "กบห.": 0, "ผปร.": 26400, "ผบค.": 0 } },
+        { code: "53034030", name: "ค่าจ้างบำรุงรักษาสวน", importantType: 'none', budgets: { "ผบง.": 72000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53034040", name: "ค่าบำรุงรักษาบริเวณสำนักงาน", importantType: 'none', budgets: { "ผบง.": 38000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53039010", name: "เชื้อเพลิงยานพาหนะ", importantType: 'operating', budgets: { "ผบง.": 92000, "กบห.": 97000, "ผปร.": 460000, "ผบค.": 155000 } },
+        { code: "53039990", name: "ค่าใช้จ่ายเบ็ดเตล็ด", importantType: 'none', budgets: { "ผบง.": 15000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53051040", name: "ค่าซ่อมแซมบำรุงรักษา-อาคาร", importantType: 'none', budgets: { "ผบง.": 175000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53051050", name: "ค่าซ่อมแซมบำรุงรักษา-ยานพาหนะ", importantType: 'none', budgets: { "ผบง.": 10000, "กบห.": 0, "ผปร.": 140000, "ผบค.": 30000 } },
+        { code: "53051060", name: "ค่าซ่อมแซมบำรุงรักษา-คอมฯ&อุปกรณ์ประกอบคอมฯ", importantType: 'none', budgets: { "ผบง.": 30000, "กบห.": 0, "ผปร.": 30000, "ผบค.": 30000 } },
+        { code: "53051090", name: "ค่าวัสดุเบ็ดเตล็ด ด้านช่าง", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 15000, "ผบค.": 15000 } },
+        { code: "53051100", name: "ค่าซ่อมแซมบำรุงรักษาอุปกรณ์ในสำนักงาน", importantType: 'none', budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 20000, "ผบค.": 20000 } },
+        { code: "53051990", name: "ค่าซ่อมแซมบำรุงรักษาอื่น ๆ", importantType: 'none', budgets: { "ผบง.": 10000, "กบห.": 0, "ผปร.": 10000, "ผบค.": 10000 } },
+        { code: "53062020", name: "ค่าเบี้ยประกัน-ยานพาหนะ", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 20000, "ผบค.": 0 } },
+        { code: "53064010", name: "ค่าภาษีที่ดินฯ", importantType: 'none', budgets: { "ผบง.": 30000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53064020", name: "ค่าภาษีและค่าธรรมเนียมยานพาหนะ", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 30000, "ผบค.": 0 } },
+        { code: "53069020", name: "ค่าขนส่งขนย้าย", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 1000, "ผบค.": 0 } },
+        { code: "53069070", name: "ค่าธรรมเนียมธนาคาร", importantType: 'none', budgets: { "ผบง.": 9000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } },
+        { code: "53069110", name: "ค่าตรวจสภาพยานพาหนะ", importantType: 'none', budgets: { "ผบง.": 0, "กบห.": 0, "ผปร.": 2500, "ผบค.": 0 } },
+        { code: "53069990", name: "ค่าใช้จ่ายอื่น", importantType: 'none', budgets: { "ผบง.": 80000, "กบห.": 0, "ผปร.": 0, "ผบค.": 0 } }
     ];
 
     // Firebase Listeners
@@ -160,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 accountData = snapshot.docs.map(doc => doc.data() as Account);
                 populateAccountDatalist();
                 renderMgmtAccountList();
+                updateSummary();
             }
         }, (error) => {
             console.error('Error in accounts snapshot:', error);
@@ -336,7 +368,21 @@ document.addEventListener('DOMContentLoaded', () => {
             budgetColPeriod.innerHTML = isYearly ? 'งบประมาณ/ปี' : 'งบประมาณ/เดือน<br><span class="text-[9px]">(คิดเป็น 75% ของงบประมาณที่ได้รับ)</span>';
             budgetColSpent.textContent = isYearly ? 'เบิกจ่าย (ทั้งปี)' : 'เบิกจ่าย (เดือนนี้)';
 
-            const allRelevantCodes = [...new Set(summaryData.map(d => d.accountCode))].filter(c => c);
+            let allRelevantCodes = [...new Set(summaryData.map(d => d.accountCode))].filter(c => c);
+            const categoryFilterValue = summaryCategoryFilter.value;
+
+            if (categoryFilterValue !== 'all') {
+                // Filter existing codes by category
+                allRelevantCodes = allRelevantCodes.filter(code => {
+                    const acc = accountData.find(a => a.code === code);
+                    return acc && acc.importantType === categoryFilterValue;
+                });
+
+                // Add all accounts in this category even if no spending
+                const categoryAccounts = accountData.filter(acc => acc.importantType === categoryFilterValue);
+                const categoryCodes = categoryAccounts.map(acc => acc.code);
+                allRelevantCodes = [...new Set([...allRelevantCodes, ...categoryCodes])];
+            }
 
             allRelevantCodes.forEach(code => {
                 const account = accountData.find(a => a.code === code);
@@ -398,6 +444,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             budgetSummaryContainer.classList.add('hidden');
         }
+    };
+
+    const renderImportantAccountsReport = () => {
+        // Removed
     };
 
     const renderTable = () => {
@@ -758,7 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSummary();
     });
 
-    [summaryDate, summaryMonth, summaryYear, summaryPayee, summaryDeptFilter].forEach(el => el.addEventListener('change', updateSummary));
+    [summaryDate, summaryMonth, summaryYear, summaryPayee, summaryDeptFilter, summaryCategoryFilter].forEach(el => el.addEventListener('change', updateSummary));
 
     const exportToCsv = (filename: string, header: string[], rows: any[][]) => {
         const csvContent = [header.join(','), ...rows.map(row => 
@@ -888,7 +938,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return statusMatch && deptMatch && periodMatch;
         });
 
-        const allRelevantCodes = [...new Set(filteredForSummary.map(d => d.accountCode))].filter(c => c);
+        let allRelevantCodes = [...new Set(filteredForSummary.map(d => d.accountCode))].filter(c => c);
+        const categoryFilterValue = summaryCategoryFilter.value;
+
+        if (categoryFilterValue !== 'all') {
+            // Filter existing codes by category
+            allRelevantCodes = allRelevantCodes.filter(code => {
+                const acc = accountData.find(a => a.code === code);
+                return acc && acc.importantType === categoryFilterValue;
+            });
+
+            // Add all accounts in this category even if no spending
+            const categoryAccounts = accountData.filter(acc => acc.importantType === categoryFilterValue);
+            const categoryCodes = categoryAccounts.map(acc => acc.code);
+            allRelevantCodes = [...new Set([...allRelevantCodes, ...categoryCodes])];
+        }
         
         const header = ["รหัสบัญชี", "ชื่อบัญชี", "งบประมาณรวม/ปี", isYearly ? "งบประมาณ/ปี" : "งบประมาณ/เดือน (75%)", isYearly ? "เบิกจ่าย (ทั้งปี)" : "เบิกจ่าย (เดือนนี้)", "คงเหลือ/เดือน", "คงเหลือ/ปี"];
         const rows = allRelevantCodes.map(code => {
@@ -1041,11 +1105,14 @@ document.addEventListener('DOMContentLoaded', () => {
         addUserForm.reset();
     });
 
+
+
     // Account Management Logic
     const accountMgmtForm = document.getElementById('account-mgmt-form') as HTMLFormElement;
     const mgmtAccountIndex = document.getElementById('mgmt-account-index') as HTMLInputElement;
     const mgmtAccountCode = document.getElementById('mgmt-account-code') as HTMLInputElement;
     const mgmtAccountName = document.getElementById('mgmt-account-name') as HTMLInputElement;
+    const mgmtAccountImportantType = document.getElementById('mgmt-account-important-type') as HTMLSelectElement;
     const mgmtBudgetผบง = document.getElementById('mgmt-budget-ผบง') as HTMLInputElement;
     const mgmtBudgetกบห = document.getElementById('mgmt-budget-กบห') as HTMLInputElement;
     const mgmtBudgetผปร = document.getElementById('mgmt-budget-ผปร') as HTMLInputElement;
@@ -1058,9 +1125,23 @@ document.addEventListener('DOMContentLoaded', () => {
         mgmtAccountList.innerHTML = '';
         accountData.forEach((acc, index) => {
             const totalBudget = Object.values(acc.budgets).reduce((sum, b) => sum + b, 0);
+            
+            let importantBadge = '';
+            if (acc.importantType === 'operating') {
+                importantBadge = '<span class="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded">ดำเนินงาน</span>';
+            } else if (acc.importantType === '7categories') {
+                importantBadge = '<span class="ml-2 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded">7 ประเภท</span>';
+            }
+
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="px-4 py-2 font-medium">${acc.code}</td>
+                <td class="px-4 py-2 text-center font-medium text-gray-900">${index + 1}</td>
+                <td class="px-4 py-2 font-medium">
+                    <div class="flex items-center">
+                        ${acc.code}
+                        ${importantBadge}
+                    </div>
+                </td>
                 <td class="px-4 py-2 truncate max-w-[150px]">${acc.name}</td>
                 <td class="px-4 py-2 text-right">${totalBudget.toLocaleString()}</td>
                 <td class="px-4 py-2 text-center space-x-2">
@@ -1074,6 +1155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetMgmtForm = () => {
         accountMgmtForm.reset();
+        mgmtAccountImportantType.value = "none";
         mgmtAccountIndex.value = "-1";
         mgmtAccountSubmit.textContent = "บันทึกรหัสบัญชี";
         mgmtAccountCancel.classList.add('hidden');
@@ -1086,6 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newAccount: Account = {
             code: code,
             name: mgmtAccountName.value,
+            importantType: mgmtAccountImportantType.value as any,
             budgets: {
                 "ผบง.": parseFloat(mgmtBudgetผบง.value) || 0,
                 "กบห.": parseFloat(mgmtBudgetกบห.value) || 0,
@@ -1106,6 +1189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mgmtAccountIndex.value = index.toString();
             mgmtAccountCode.value = acc.code;
             mgmtAccountName.value = acc.name;
+            mgmtAccountImportantType.value = acc.importantType || 'none';
             mgmtBudgetผบง.value = (acc.budgets["ผบง."] || 0).toString();
             mgmtBudgetกบห.value = (acc.budgets["กบห."] || 0).toString();
             mgmtBudgetผปร.value = (acc.budgets["ผปร."] || 0).toString();
