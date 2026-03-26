@@ -272,9 +272,11 @@
                         <div>
                             <label for="summary-category-filter" class="block text-sm font-medium text-black">ประเภทงบประมาณ</label>
                             <select id="summary-category-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="all">1. ทั้งหมด</option>
+                                <option value="all">ทั้งหมด</option>
+                                <option value="none">1. ทั่วไป</option>
                                 <option value="operating">2. ค่าใช้จ่ายดำเนินงาน</option>
                                 <option value="7categories">3. ค่าใช้จ่าย 7 ประเภท</option>
+                                <option value="both">4. ค่าใช้จ่ายดำเนินงาน และ ค่าใช้จ่าย 7 ประเภท</option>
                             </select>
                         </div>
                         <div id="specific-filters-container">
@@ -318,7 +320,7 @@
                                     <tr>
                                         <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase">รหัสบัญชี</th>
                                         <th id="budget-col-annual" class="px-3 py-2 text-right font-medium text-gray-500 uppercase">งบประมาณ/ปี</th>
-                                        <th id="budget-col-period" class="px-3 py-2 text-right font-medium text-gray-500 uppercase text-[10px]">งบประมาณ/เดือน<br>(คิดเป็น 75% ของงบประมาณที่ได้รับ)</th>
+                                        <th id="budget-col-period" class="px-3 py-2 text-right font-medium text-gray-500 uppercase text-[10px]">งบประมาณ/เดือน<br>(คิดเป็น 70% ของงบประมาณที่ได้รับ)</th>
                                         <th id="budget-col-spent" class="px-3 py-2 text-right font-medium text-gray-500 uppercase">เบิกจ่ายจริง</th>
                                         <th class="px-3 py-2 text-right font-medium text-gray-500 uppercase">คงเหลือ/เดือน</th>
                                         <th class="px-3 py-2 text-right font-medium text-gray-500 uppercase">คงเหลือ/ปี</th>
@@ -387,9 +389,10 @@
                             <div class="mb-4">
                                 <label for="mgmt-account-important-type" class="block text-xs font-medium text-gray-700 mb-1">ประเภทงบประมาณ</label>
                                 <select id="mgmt-account-important-type" class="block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
-                                    <option value="none">ทั่วไป (Normal)</option>
-                                    <option value="operating">1. ค่าใช้จ่ายดำเนินงาน</option>
-                                    <option value="7categories">2. ค่าใช้จ่าย 7 ประเภท</option>
+                                    <option value="none">1. ทั่วไป</option>
+                                    <option value="operating">2. ค่าใช้จ่ายดำเนินงาน</option>
+                                    <option value="7categories">3. ค่าใช้จ่าย 7 ประเภท</option>
+                                    <option value="both">4. ค่าใช้จ่ายดำเนินงาน และ ค่าใช้จ่าย 7 ประเภท</option>
                                 </select>
                             </div>
                             <div class="flex space-x-2">

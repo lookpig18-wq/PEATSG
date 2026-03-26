@@ -28,7 +28,7 @@ interface Disbursement {
 interface Account {
   code: string;
   name: string;
-  importantType?: 'none' | 'operating' | '7categories';
+  importantType?: 'none' | 'operating' | '7categories' | 'both';
   budgets: {
     [key: string]: number;
   };
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isYearly = summaryType === 'yearly';
             budgetSummaryTitle.textContent = isYearly ? `สรุปงบประมาณรายบัญชี (ประจำปี ${selectedPeriod})` : `สรุปงบประมาณรายบัญชี (ประจำเดือน ${selectedPeriod})`;
             budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
-            budgetColPeriod.innerHTML = isYearly ? 'งบประมาณ/ปี' : 'งบประมาณ/เดือน<br><span class="text-[9px]">(คิดเป็น 75% ของงบประมาณที่ได้รับ)</span>';
+            budgetColPeriod.innerHTML = isYearly ? 'งบประมาณ/ปี' : 'งบประมาณ/เดือน<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
             budgetColSpent.textContent = isYearly ? 'เบิกจ่าย (ทั้งปี)' : 'เบิกจ่าย (เดือนนี้)';
 
             let allRelevantCodes = [...new Set(summaryData.map(d => d.accountCode))].filter(c => c);
@@ -396,8 +396,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const monthlyBudgetFull = annualBudgetForDept / 12;
-                const monthlyBudget75 = monthlyBudgetFull * 0.75;
-                const periodBudgetDisplay = isYearly ? annualBudgetForDept : monthlyBudget75;
+                const monthlyBudget70 = monthlyBudgetFull * 0.70;
+                const periodBudgetDisplay = isYearly ? annualBudgetForDept : monthlyBudget70;
 
                 const periodSpent = summaryData
                     .filter(d => d.accountCode === code)
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .reduce((sum, d) => sum + parseFloat(d.price), 0);
                 }
 
-                const remainingMonth = monthlyBudget75 - (isYearly ? (periodSpent / 12) : periodSpent);
+                const remainingMonth = monthlyBudget70 - (isYearly ? (periodSpent / 12) : periodSpent);
                 const remainingYear = annualBudgetForDept - totalSpentYear;
                 const isOverThreshold = periodSpent > periodBudgetDisplay;
 
@@ -954,7 +954,7 @@ document.addEventListener('DOMContentLoaded', () => {
             allRelevantCodes = [...new Set([...allRelevantCodes, ...categoryCodes])];
         }
         
-        const header = ["รหัสบัญชี", "ชื่อบัญชี", "งบประมาณรวม/ปี", isYearly ? "งบประมาณ/ปี" : "งบประมาณ/เดือน (75%)", isYearly ? "เบิกจ่าย (ทั้งปี)" : "เบิกจ่าย (เดือนนี้)", "คงเหลือ/เดือน", "คงเหลือ/ปี"];
+        const header = ["รหัสบัญชี", "ชื่อบัญชี", "งบประมาณรวม/ปี", isYearly ? "งบประมาณ/ปี" : "งบประมาณ/เดือน (70%)", isYearly ? "เบิกจ่าย (ทั้งปี)" : "เบิกจ่าย (เดือนนี้)", "คงเหลือ/เดือน", "คงเหลือ/ปี"];
         const rows = allRelevantCodes.map(code => {
             const account = accountData.find(a => a.code === code);
             if (!account) return null;
@@ -967,8 +967,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const monthlyBudgetFull = annualBudgetForDept / 12;
-            const monthlyBudget75 = monthlyBudgetFull * 0.75;
-            const periodBudgetDisplay = isYearly ? annualBudgetForDept : monthlyBudget75;
+            const monthlyBudget70 = monthlyBudgetFull * 0.70;
+            const periodBudgetDisplay = isYearly ? annualBudgetForDept : monthlyBudget70;
 
             const periodSpent = filteredForSummary
                 .filter(d => d.accountCode === code)
@@ -989,7 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .reduce((sum, d) => sum + parseFloat(d.price), 0);
             }
 
-            const remainingMonth = monthlyBudget75 - (isYearly ? (periodSpent / 12) : periodSpent);
+            const remainingMonth = monthlyBudget70 - (isYearly ? (periodSpent / 12) : periodSpent);
             const remainingYear = annualBudgetForDept - totalSpentYear;
 
             return [
@@ -1131,6 +1131,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 importantBadge = '<span class="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded">ดำเนินงาน</span>';
             } else if (acc.importantType === '7categories') {
                 importantBadge = '<span class="ml-2 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded">7 ประเภท</span>';
+            } else if (acc.importantType === 'both') {
+                importantBadge = '<span class="ml-2 px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded">ดำเนินงาน & 7 ประเภท</span>';
             }
 
             const row = document.createElement('tr');
