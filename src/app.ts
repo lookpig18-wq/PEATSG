@@ -67,12 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportDisbursementSummaryBtn = document.getElementById('export-disbursement-summary-btn')!;
     const exportBudgetSummaryBtn = document.getElementById('export-budget-summary-btn')!;
     const summaryTypeFilter = document.getElementById('summary-type-filter') as HTMLSelectElement;
-    const dailyFilterContainer = document.getElementById('daily-filter-container')!;
-    const summaryDate = document.getElementById('summary-date') as HTMLInputElement;
     const monthlyFilterContainer = document.getElementById('monthly-filter-container')!;
     const summaryMonth = document.getElementById('summary-month') as HTMLInputElement;
-    const yearlyFilterContainer = document.getElementById('yearly-filter-container')!;
-    const summaryYear = document.getElementById('summary-year') as HTMLSelectElement;
+    const quarterFilterContainer = document.getElementById('quarter-filter-container')!;
+    const summaryQuarterYear = document.getElementById('summary-quarter-year') as HTMLSelectElement;
+    const summaryQuarter = document.getElementById('summary-quarter') as HTMLSelectElement;
+    const rangeFilterContainer = document.getElementById('range-filter-container')!;
+    const summaryStartDate = document.getElementById('summary-start-date') as HTMLInputElement;
+    const summaryEndDate = document.getElementById('summary-end-date') as HTMLInputElement;
     const summaryDeptFilter = document.getElementById('summary-dept-filter') as HTMLSelectElement;
     const summaryCategoryFilter = document.getElementById('summary-category-filter') as HTMLSelectElement;
     const payeeFilterContainer = document.getElementById('payee-filter-container')!;
@@ -295,10 +297,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let selectedPeriod = '';
 
         switch (summaryType) {
-            case 'daily':
-                if (summaryDate.value) {
-                    summaryData = filteredForTable.filter(d => d.date === summaryDate.value);
-                }
+            case 'all':
+                selectedPeriod = new Date().getFullYear().toString();
+                summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
                 break;
             case 'monthly':
                 if (summaryMonth.value) {
@@ -306,15 +307,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
                 }
                 break;
-            case 'yearly':
-                if (summaryYear.value) {
-                    selectedPeriod = summaryYear.value;
-                    summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
+            case 'quarter':
+                if (summaryQuarterYear.value && summaryQuarter.value) {
+                    const year = summaryQuarterYear.value;
+                    const q = summaryQuarter.value;
+                    selectedPeriod = `${year} Q${q}`;
+                    summaryData = filteredForTable.filter(d => {
+                        const month = parseInt(d.date.split('-')[1]);
+                        if (q === '1') return d.date.startsWith(year) && month >= 1 && month <= 3;
+                        if (q === '2') return d.date.startsWith(year) && month >= 4 && month <= 6;
+                        if (q === '3') return d.date.startsWith(year) && month >= 7 && month <= 9;
+                        if (q === '4') return d.date.startsWith(year) && month >= 10 && month <= 12;
+                        return false;
+                    });
                 }
                 break;
             case 'payee':
                 if (summaryPayee.value) {
                     summaryData = filteredForTable.filter(d => d.payee === summaryPayee.value);
+                }
+                break;
+            case 'range':
+                if (summaryStartDate.value && summaryEndDate.value) {
+                    const start = summaryStartDate.value;
+                    const end = summaryEndDate.value;
+                    summaryData = filteredForTable.filter(d => d.date >= start && d.date <= end);
                 }
                 break;
             default:
@@ -331,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const summaryDetailsList = document.getElementById('summary-details-list')!;
         summaryDetailsList.innerHTML = '';
 
-        if (summaryData.length > 0 && summaryType !== 'all') {
+        if (summaryData.length > 0) {
             const list = document.createElement('ul');
             list.className = 'divide-y divide-gray-200';
             summaryData.forEach(d => {
@@ -356,17 +373,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const budgetColAnnual = document.getElementById('budget-col-annual')!;
         const budgetColPeriod = document.getElementById('budget-col-period')!;
         const budgetColSpent = document.getElementById('budget-col-spent')!;
+        const budgetColRemainingPeriod = document.getElementById('budget-col-remaining-period')!;
+        const budgetColRemainingYear = document.getElementById('budget-col-remaining-year')!;
         
-        if ((summaryType === 'monthly' || summaryType === 'yearly') && selectedPeriod) {
+        if ((summaryType === 'monthly' || summaryType === 'quarter' || summaryType === 'all') && selectedPeriod) {
             // Show for all users when a period is selected
             budgetSummaryContainer.classList.remove('hidden');
             budgetSummaryBody.innerHTML = '';
 
-            const isYearly = summaryType === 'yearly';
-            budgetSummaryTitle.textContent = isYearly ? `สรุปงบประมาณรายบัญชี (ประจำปี ${selectedPeriod})` : `สรุปงบประมาณรายบัญชี (ประจำเดือน ${selectedPeriod})`;
-            budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
-            budgetColPeriod.innerHTML = isYearly ? 'งบประมาณ/ปี' : 'งบประมาณ/เดือน<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
-            budgetColSpent.textContent = isYearly ? 'เบิกจ่าย (ทั้งปี)' : 'เบิกจ่าย (เดือนนี้)';
+            if (summaryType === 'all') {
+                budgetSummaryTitle.textContent = `สรุปงบประมาณรายบัญชี (ภาพรวมทั้งหมด ปี ${selectedPeriod})`;
+                budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
+                budgetColPeriod.innerHTML = 'งบประมาณ/ปี<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
+                budgetColSpent.textContent = 'เบิกจ่ายสะสม';
+                budgetColRemainingPeriod.textContent = 'คงเหลือสะสม';
+                budgetColRemainingYear.textContent = 'คงเหลือ/ปี';
+            } else if (summaryType === 'monthly') {
+                budgetSummaryTitle.textContent = `สรุปงบประมาณรายบัญชี (ประจำเดือน ${selectedPeriod})`;
+                budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
+                budgetColPeriod.innerHTML = 'งบประมาณ/เดือน<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
+                budgetColSpent.textContent = 'เบิกจ่าย (เดือนนี้)';
+                budgetColRemainingPeriod.textContent = 'คงเหลือ/เดือน';
+                budgetColRemainingYear.textContent = 'คงเหลือ/ปี';
+            } else if (summaryType === 'quarter') {
+                budgetSummaryTitle.textContent = `สรุปงบประมาณรายบัญชี (ประจำไตรมาส ${selectedPeriod})`;
+                budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
+                budgetColPeriod.innerHTML = 'งบประมาณ/ไตรมาส<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
+                budgetColSpent.textContent = 'เบิกจ่าย (ไตรมาสนี้)';
+                budgetColRemainingPeriod.textContent = 'คงเหลือ/ไตรมาส';
+                budgetColRemainingYear.textContent = 'คงเหลือ/ปี';
+            }
 
             let allRelevantCodes = [...new Set(summaryData.map(d => d.accountCode))].filter(c => c);
             const categoryFilterValue = summaryCategoryFilter.value;
@@ -395,9 +431,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     annualBudgetForDept = account.budgets[deptFilterValue] || 0;
                 }
 
-                const monthlyBudgetFull = annualBudgetForDept / 12;
-                const monthlyBudget70 = monthlyBudgetFull * 0.70;
-                const periodBudgetDisplay = isYearly ? annualBudgetForDept : monthlyBudget70;
+                let annualBudgetDisplay = annualBudgetForDept;
+                let periodBudgetDisplay = 0;
+                if (summaryType === 'all') {
+                    annualBudgetDisplay = annualBudgetForDept;
+                    periodBudgetDisplay = annualBudgetForDept * 0.70;
+                } else if (summaryType === 'monthly') {
+                    periodBudgetDisplay = (annualBudgetForDept / 12) * 0.70;
+                } else if (summaryType === 'quarter') {
+                    periodBudgetDisplay = (annualBudgetForDept / 4) * 0.70;
+                }
 
                 const periodSpent = summaryData
                     .filter(d => d.accountCode === code)
@@ -405,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let totalSpentYear = 0;
                 const currentYear = selectedPeriod.substring(0, 4);
-                if (isYearly) {
+                if (summaryType === 'all') {
                     totalSpentYear = periodSpent;
                 } else {
                     totalSpentYear = disbursements
@@ -418,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .reduce((sum, d) => sum + parseFloat(d.price), 0);
                 }
 
-                const remainingMonth = monthlyBudget70 - (isYearly ? (periodSpent / 12) : periodSpent);
+                const remainingPeriod = periodBudgetDisplay - periodSpent;
                 const remainingYear = annualBudgetForDept - totalSpentYear;
                 const isOverThreshold = periodSpent > periodBudgetDisplay;
 
@@ -429,10 +472,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="font-medium text-gray-900">${code}</div>
                         <div class="text-[10px] text-gray-500 truncate max-w-[120px]">${account.name}</div>
                     </td>
-                    <td class="px-3 py-2 text-right whitespace-nowrap">${annualBudgetForDept.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="px-3 py-2 text-right whitespace-nowrap">${annualBudgetDisplay.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="px-3 py-2 text-right whitespace-nowrap">${periodBudgetDisplay.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="px-3 py-2 text-right whitespace-nowrap font-medium ${isOverThreshold ? 'text-red-600' : ''}">${periodSpent.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td class="px-3 py-2 text-right whitespace-nowrap font-medium ${remainingMonth < 0 ? 'text-red-600' : 'text-gray-700'}">${remainingMonth.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="px-3 py-2 text-right whitespace-nowrap font-medium ${remainingPeriod < 0 ? 'text-red-600' : 'text-gray-700'}">${remainingPeriod.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="px-3 py-2 text-right whitespace-nowrap font-medium ${remainingYear < 0 ? 'text-red-600' : 'text-gray-700'}">${remainingYear.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 `;
                 budgetSummaryBody.appendChild(row);
@@ -795,20 +838,20 @@ document.addEventListener('DOMContentLoaded', () => {
     statusFilter.addEventListener('change', renderTable);
 
     summaryTypeFilter.addEventListener('change', () => {
-        dailyFilterContainer.classList.add('hidden');
+        rangeFilterContainer.classList.add('hidden');
         monthlyFilterContainer.classList.add('hidden');
-        yearlyFilterContainer.classList.add('hidden');
+        quarterFilterContainer.classList.add('hidden');
         payeeFilterContainer.classList.add('hidden');
         switch (summaryTypeFilter.value) {
-            case 'daily': dailyFilterContainer.classList.remove('hidden'); break;
+            case 'range': rangeFilterContainer.classList.remove('hidden'); break;
             case 'monthly': monthlyFilterContainer.classList.remove('hidden'); break;
-            case 'yearly': yearlyFilterContainer.classList.remove('hidden'); break;
+            case 'quarter': quarterFilterContainer.classList.remove('hidden'); break;
             case 'payee': payeeFilterContainer.classList.remove('hidden'); break;
         }
         updateSummary();
     });
 
-    [summaryDate, summaryMonth, summaryYear, summaryPayee, summaryDeptFilter, summaryCategoryFilter].forEach(el => el.addEventListener('change', updateSummary));
+    [summaryStartDate, summaryEndDate, summaryMonth, summaryQuarterYear, summaryQuarter, summaryPayee, summaryDeptFilter, summaryCategoryFilter].forEach(el => el.addEventListener('change', updateSummary));
 
     const exportToCsv = (filename: string, header: string[], rows: any[][]) => {
         const csvContent = [header.join(','), ...rows.map(row => 
