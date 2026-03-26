@@ -493,6 +493,40 @@ document.addEventListener('DOMContentLoaded', () => {
         // Removed
     };
 
+    const openAttachment = (dataUrl: string, filename: string) => {
+        if (!dataUrl) return;
+        
+        try {
+            // Convert Data URL to Blob for better mobile support
+            const arr = dataUrl.split(',');
+            const mime = arr[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            const blob = new Blob([u8arr], { type: mime });
+            const url = URL.createObjectURL(blob);
+            
+            // Create a temporary link to open the blob
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (e) {
+            console.error('Error opening attachment:', e);
+            // Fallback
+            window.open(dataUrl, '_blank');
+        }
+    };
+
     const renderTable = () => {
         tableBody.innerHTML = '';
         const filterValue = statusFilter.value;
@@ -532,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${d.attachment ? `<a href="${d.attachment}" target="_blank" class="text-indigo-600 hover:text-indigo-900 inline-flex items-center space-x-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h4"/><path d="M10 16h4"/><path d="M12 10v6"/></svg> <span>ดูไฟล์</span></a>` : 'ไม่มี'}
+                    ${d.attachment ? `<button class="view-attachment-btn text-indigo-600 hover:text-indigo-900 inline-flex items-center space-x-1" data-id="${d.id}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h4"/><path d="M10 16h4"/><path d="M12 10v6"/></svg> <span>ดูไฟล์</span></button>` : 'ไม่มี'}
                 </td>
                 ${sessionStorage.getItem('userRole') === 'admin' ? `
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -795,6 +829,17 @@ document.addEventListener('DOMContentLoaded', () => {
     tableBody.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
         const editBtn = target.closest('.edit-btn') as HTMLElement;
+        const viewAttachmentBtn = target.closest('.view-attachment-btn') as HTMLElement;
+
+        if (viewAttachmentBtn) {
+            const id = viewAttachmentBtn.dataset.id;
+            const disbursement = disbursements.find(d => d.id === id);
+            if (disbursement && disbursement.attachment) {
+                openAttachment(disbursement.attachment, disbursement.attachmentName || 'attachment.pdf');
+            }
+            return;
+        }
+
         if (editBtn) {
             const id = editBtn.dataset.id;
             const disbursement = disbursements.find(d => d.id === id);
