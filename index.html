@@ -84,23 +84,34 @@
                     <form id="disbursement-form" class="space-y-4">
                         <input type="hidden" id="disbursement-id">
                         <div>
-                            <label for="account-code" class="block text-sm font-medium text-black">รหัสบัญชี</label>
-                            <input type="text" id="account-code" list="account-codes" placeholder="พิมพ์เพื่อค้นหารหัสบัญชี..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                            <datalist id="account-codes"></datalist>
-                        </div>
-                        <div>
-                            <label for="account-name" class="block text-sm font-medium text-black">ชื่อบัญชี</label>
-                            <input type="text" id="account-name" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
-                        </div>
-                        <div>
-                            <label for="cost-center" class="block text-sm font-medium text-black">ศูนย์ต้นทุน</label>
-                            <select id="cost-center" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                                <option value="">-- เลือกศูนย์ต้นทุน --</option>
-                                <option value="ผบง.">ศูนย์ต้นทุน ผบง.</option>
-                                <option value="กบห.">ศูนย์ต้นทุน กบห.</option>
-                                <option value="ผปร.">ศูนย์ต้นทุน ผปร.</option>
-                                <option value="ผบค.">ศูนย์ต้นทุน ผบค.</option>
+                            <label for="budget-source" class="block text-sm font-medium text-black">หมวดค่าใช้จ่าย</label>
+                            <select id="budget-source" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                <option value="">-- เลือกประเภทการเบิก --</option>
+                                <option value="ต้นสังกัด">ศูนย์ต้นทุนต้นสังกัด</option>
+                                <option value="หน่วยงาน">ศูนย์ต้นทุนหน่วยงาน</option>
+                                <option value="หมายเลขงาน">หมายเลขงาน</option>
                             </select>
+                        </div>
+                        <div id="account-details-container" class="space-y-4 hidden border-l-2 border-indigo-500 pl-4 py-2 bg-indigo-50/30">
+                            <div>
+                                <label for="account-code" class="block text-sm font-medium text-black">รหัสบัญชี</label>
+                                <input type="text" id="account-code" list="account-codes" placeholder="พิมพ์เพื่อค้นหารหัสบัญชี..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <datalist id="account-codes"></datalist>
+                            </div>
+                            <div>
+                                <label for="account-name" class="block text-sm font-medium text-black">ชื่อบัญชี</label>
+                                <input type="text" id="account-name" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm" readonly>
+                            </div>
+                            <div>
+                                <label for="cost-center" class="block text-sm font-medium text-black">ศูนย์ต้นทุน</label>
+                                <select id="cost-center" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    <option value="">-- เลือกศูนย์ต้นทุน --</option>
+                                    <option value="ผบง.">ศูนย์ต้นทุน ผบง.</option>
+                                    <option value="กบห.">ศูนย์ต้นทุน กบห.</option>
+                                    <option value="ผปร.">ศูนย์ต้นทุน ผปร.</option>
+                                    <option value="ผบค.">ศูนย์ต้นทุน ผบค.</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -230,13 +241,9 @@
                                 <span>โหลดข้อมูลบันทึก</span>
                             </button>
                         </div>
-                        <div class="w-full sm:w-auto mt-4 sm:mt-0">
-                            <label for="status-filter" class="text-sm font-medium text-white">กรองตามสถานะ:</label>
-                            <select id="status-filter" class="mt-1 sm:mt-0 ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="all">ทั้งหมด</option>
-                                <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
-                                <option value="เสร็จสิ้น">เสร็จสิ้น</option>
-                            </select>
+                        <div class="w-full sm:w-auto mt-4 sm:mt-0 flex items-center bg-white rounded-md shadow-sm border border-gray-300 px-3 py-1 focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 mr-2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input type="text" id="table-search" placeholder="ค้นหา (วันที่, เลขบัญชี, เลขใบสำคัญ, ผู้รับเงิน...)" class="border-none focus:ring-0 text-sm w-full sm:w-64">
                         </div>
                     </div>
 
@@ -271,23 +278,13 @@
         <div id="tab-summary-content" class="hidden">
                 <div id="summary" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold">สรุปรายการเบิกจ่าย</h3>
+                        <h3 class="text-lg font-bold">สรุปงบประมาณรายบัญชี (ภาพรวมทั้งหมด ปี 2026)</h3>
                         <button id="export-disbursement-summary-btn" class="inline-flex items-center justify-center space-x-1 text-xs bg-green-600 hover:bg-green-700 text-white py-1.5 px-3 rounded-md shadow-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             <span>โหลดสรุปเบิกจ่าย</span>
                         </button>
                     </div>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-                        <div>
-                            <label for="summary-type-filter" class="block text-sm font-medium text-black">สรุปข้อมูลตาม</label>
-                            <select id="summary-type-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="all">ภาพรวมทั้งหมด</option>
-                                <option value="range">1. วันที่ (ช่วงวันที่)</option>
-                                <option value="monthly">2. เดือน</option>
-                                <option value="quarter">3. ไตรมาส</option>
-                                <option value="payee">4. ผู้รับเงิน</option>
-                            </select>
-                        </div>
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                         <div>
                             <label for="summary-dept-filter" class="block text-sm font-medium text-black">ศูนย์ต้นทุน (แผนก)</label>
                             <select id="summary-dept-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
@@ -299,62 +296,19 @@
                             </select>
                         </div>
                         <div>
-                            <label for="summary-category-filter" class="block text-sm font-medium text-black">ประเภทงบประมาณ</label>
-                            <select id="summary-category-filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                <option value="all">ทั้งหมด</option>
-                                <option value="none">1. ทั่วไป</option>
-                                <option value="operating">2. ค่าใช้จ่ายดำเนินงาน</option>
-                                <option value="7categories">3. ค่าใช้จ่าย 7 ประเภท</option>
-                                <option value="both">4. ค่าใช้จ่ายดำเนินงาน และ ค่าใช้จ่าย 7 ประเภท</option>
-                            </select>
+                            <label for="summary-month" class="block text-sm font-medium text-black">เลือกเดือน</label>
+                            <input type="month" id="summary-month" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
-                        <div id="specific-filters-container">
-                            <div id="range-filter-container" class="hidden">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label for="summary-start-date" class="block text-sm font-medium text-black">ตั้งแต่วันที่</label>
-                                        <input type="date" id="summary-start-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                    </div>
-                                    <div>
-                                        <label for="summary-end-date" class="block text-sm font-medium text-black">ถึงวันที่</label>
-                                        <input type="date" id="summary-end-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="monthly-filter-container" class="hidden">
-                                <label for="summary-month" class="block text-sm font-medium text-black">เลือกเดือน</label>
-                                <input type="month" id="summary-month" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            </div>
-                            <div id="quarter-filter-container" class="hidden">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label for="summary-quarter-year" class="block text-sm font-medium text-black">ปี</label>
-                                        <select id="summary-quarter-year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                            <option value="2024">2024</option>
-                                            <option value="2025">2025</option>
-                                            <option value="2026">2026</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="summary-quarter" class="block text-sm font-medium text-black">ไตรมาส</label>
-                                        <select id="summary-quarter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                                            <option value="1">Q1 (ม.ค. - มี.ค.)</option>
-                                            <option value="2">Q2 (เม.ย. - มิ.ย.)</option>
-                                            <option value="3">Q3 (ก.ค. - ก.ย.)</option>
-                                            <option value="4">Q4 (ต.ค. - ธ.ค.)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="payee-filter-container" class="hidden">
-                                <label for="summary-payee" class="block text-sm font-medium text-black">เลือกผู้รับเงิน</label>
-                                <select id="summary-payee" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></select>
-                            </div>
+                        <div>
+                            <label for="summary-start-date" class="block text-sm font-medium text-black">ตั้งแต่วันที่</label>
+                            <input type="date" id="summary-start-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="summary-end-date" class="block text-sm font-medium text-black">ถึงวันที่</label>
+                            <input type="date" id="summary-end-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
                     </div>
-
-                    <div id="summary-content" class="mt-4 pt-4 border-t border-gray-200 text-black">กำลังคำนวณ...</div>
-                    <div id="summary-details-list" class="mt-4 max-h-60 overflow-y-auto"></div>
+                    </div>
 
                     <div id="budget-summary-container" class="mt-6 pt-6 border-t border-gray-200 hidden">
                         <div class="flex justify-between items-center mb-3">

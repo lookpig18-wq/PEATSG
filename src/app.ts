@@ -24,6 +24,7 @@ interface Disbursement {
   status: string;
   attachment: string | null;
   attachmentName: string | null;
+  budgetSource?: string;
   createdAt?: any;
 }
 
@@ -55,8 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('disbursement-form') as HTMLFormElement;
     const formTitle = document.getElementById('form-title')!;
     const tableBody = document.getElementById('disbursement-table-body')!;
-    const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
-    const summaryContent = document.getElementById('summary-content')!;
+    const tableSearch = document.getElementById('table-search') as HTMLInputElement;
     const disbursementIdInput = document.getElementById('disbursement-id') as HTMLInputElement;
     const priceInput = document.getElementById('price') as HTMLInputElement;
     const taxInput = document.getElementById('tax') as HTMLInputElement;
@@ -68,19 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportRecordedDataBtn = document.getElementById('export-recorded-data-btn')!;
     const exportDisbursementSummaryBtn = document.getElementById('export-disbursement-summary-btn')!;
     const exportBudgetSummaryBtn = document.getElementById('export-budget-summary-btn')!;
-    const summaryTypeFilter = document.getElementById('summary-type-filter') as HTMLSelectElement;
-    const monthlyFilterContainer = document.getElementById('monthly-filter-container')!;
     const summaryMonth = document.getElementById('summary-month') as HTMLInputElement;
-    const quarterFilterContainer = document.getElementById('quarter-filter-container')!;
-    const summaryQuarterYear = document.getElementById('summary-quarter-year') as HTMLSelectElement;
-    const summaryQuarter = document.getElementById('summary-quarter') as HTMLSelectElement;
-    const rangeFilterContainer = document.getElementById('range-filter-container')!;
     const summaryStartDate = document.getElementById('summary-start-date') as HTMLInputElement;
     const summaryEndDate = document.getElementById('summary-end-date') as HTMLInputElement;
     const summaryDeptFilter = document.getElementById('summary-dept-filter') as HTMLSelectElement;
-    const summaryCategoryFilter = document.getElementById('summary-category-filter') as HTMLSelectElement;
-    const payeeFilterContainer = document.getElementById('payee-filter-container')!;
-    const summaryPayee = document.getElementById('summary-payee') as HTMLSelectElement;
     const attachmentContainer = document.getElementById('attachment-container')!;
     const attachmentInput = document.getElementById('attachment') as HTMLInputElement;
     const attachmentNameDisplay = document.getElementById('attachment-name')!;
@@ -119,6 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
         tabEntryBtn.classList.add('text-white', 'hover:bg-white/10');
     });
 
+    const budgetSourceInput = document.getElementById('budget-source') as HTMLSelectElement;
+    const accountDetailsContainer = document.getElementById('account-details-container')!;
     const accountCodeInput = document.getElementById('account-code') as HTMLInputElement;
     const accountNameInput = document.getElementById('account-name') as HTMLInputElement;
     const costCenterInput = document.getElementById('cost-center') as HTMLSelectElement;
@@ -224,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             renderTable();
             updateSummary();
-            populatePayeeFilter();
         }, (error) => {
             console.error('Error in disbursements snapshot:', error);
         });
@@ -300,89 +292,37 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateSummary = () => {
-        const mainFilterValue = statusFilter.value;
         const deptFilterValue = summaryDeptFilter.value;
+        const currentYear = "2026"; // User requested image for 2026
 
         let filteredForTable = disbursements.filter(d => {
-            const statusMatch = mainFilterValue === 'all' || d.status === mainFilterValue;
+            const statusMatch = true;
             const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
             return statusMatch && deptMatch;
         });
 
-        const summaryType = summaryTypeFilter.value;
         let summaryData = [];
         let selectedPeriod = '';
+        let summaryDisplayText = `ภาพรวมทั้งหมด ปี ${currentYear}`;
 
-        switch (summaryType) {
-            case 'all':
-                selectedPeriod = new Date().getFullYear().toString();
-                summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
-                break;
-            case 'monthly':
-                if (summaryMonth.value) {
-                    selectedPeriod = summaryMonth.value;
-                    summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
-                }
-                break;
-            case 'quarter':
-                if (summaryQuarterYear.value && summaryQuarter.value) {
-                    const year = summaryQuarterYear.value;
-                    const q = summaryQuarter.value;
-                    selectedPeriod = `${year} Q${q}`;
-                    summaryData = filteredForTable.filter(d => {
-                        const month = parseInt(d.date.split('-')[1]);
-                        if (q === '1') return d.date.startsWith(year) && month >= 1 && month <= 3;
-                        if (q === '2') return d.date.startsWith(year) && month >= 4 && month <= 6;
-                        if (q === '3') return d.date.startsWith(year) && month >= 7 && month <= 9;
-                        if (q === '4') return d.date.startsWith(year) && month >= 10 && month <= 12;
-                        return false;
-                    });
-                }
-                break;
-            case 'payee':
-                if (summaryPayee.value) {
-                    summaryData = filteredForTable.filter(d => d.payee === summaryPayee.value);
-                }
-                break;
-            case 'range':
-                if (summaryStartDate.value && summaryEndDate.value) {
-                    const start = summaryStartDate.value;
-                    const end = summaryEndDate.value;
-                    summaryData = filteredForTable.filter(d => d.date >= start && d.date <= end);
-                }
-                break;
-            default:
-                summaryData = [...filteredForTable];
-                break;
+        if (summaryStartDate.value && summaryEndDate.value) {
+            const start = summaryStartDate.value;
+            const end = summaryEndDate.value;
+            selectedPeriod = `${start}_to_${end}`;
+            summaryData = filteredForTable.filter(d => d.date >= start && d.date <= end);
+            summaryDisplayText = `ระหว่างวันที่ ${start} ถึง ${end}`;
+        } else if (summaryMonth.value) {
+            selectedPeriod = summaryMonth.value;
+            summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
+            summaryDisplayText = `ประจำเดือน ${selectedPeriod}`;
+        } else {
+            selectedPeriod = currentYear;
+            summaryData = filteredForTable.filter(d => d.date.startsWith(selectedPeriod));
+            summaryDisplayText = `ภาพรวมทั้งหมด ปี ${currentYear}`;
         }
 
         const total = summaryData.reduce((sum, d) => sum + parseFloat(d.price), 0);
-        summaryContent.innerHTML = `
-            <p>จำนวน (ตามตัวกรองสรุป): ${summaryData.length} รายการ</p>
-            <p class="font-semibold">ยอดรวม (ตามตัวกรองสรุป): ${total.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
-        `;
-
-        const summaryDetailsList = document.getElementById('summary-details-list')!;
-        summaryDetailsList.innerHTML = '';
-
-        if (summaryData.length > 0) {
-            const list = document.createElement('ul');
-            list.className = 'divide-y divide-gray-200';
-            summaryData.forEach(d => {
-                const listItem = document.createElement('li');
-                listItem.className = 'py-2 flex justify-between items-center';
-                listItem.innerHTML = `
-                    <div>
-                        <p class="text-sm font-medium text-gray-900">${d.description} (${d.date})</p>
-                        <p class="text-sm text-gray-500">${d.payee} [${d.costCenter}]</p>
-                    </div>
-                    <p class="text-sm font-medium text-gray-900">${parseFloat(d.price).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                `;
-                list.appendChild(listItem);
-            });
-            summaryDetailsList.appendChild(list);
-        }
-
+        
         // Budget Summary Table Logic
         const budgetSummaryContainer = document.getElementById('budget-summary-container')!;
         const budgetSummaryBody = document.getElementById('budget-summary-body')!;
@@ -393,49 +333,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const budgetColRemainingPeriod = document.getElementById('budget-col-remaining-period')!;
         const budgetColRemainingYear = document.getElementById('budget-col-remaining-year')!;
         
-        if ((summaryType === 'monthly' || summaryType === 'quarter' || summaryType === 'all') && selectedPeriod) {
-            // Show for all users when a period is selected
+        if (selectedPeriod) {
             budgetSummaryContainer.classList.remove('hidden');
             budgetSummaryBody.innerHTML = '';
 
-            if (summaryType === 'all') {
-                budgetSummaryTitle.textContent = `สรุปงบประมาณรายบัญชี (ภาพรวมทั้งหมด ปี ${selectedPeriod})`;
-                budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
-                budgetColPeriod.innerHTML = 'งบประมาณ/ปี<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
-                budgetColSpent.textContent = 'เบิกจ่ายสะสม';
-                budgetColRemainingPeriod.textContent = 'คงเหลือสะสม';
-                budgetColRemainingYear.textContent = 'คงเหลือ/ปี';
-            } else if (summaryType === 'monthly') {
-                budgetSummaryTitle.textContent = `สรุปงบประมาณรายบัญชี (ประจำเดือน ${selectedPeriod})`;
-                budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
+            budgetSummaryTitle.textContent = `สรุปงบประมาณรายบัญชี (${summaryDisplayText})`;
+            budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
+            
+            if (summaryMonth.value && !summaryStartDate.value) {
                 budgetColPeriod.innerHTML = 'งบประมาณ/เดือน<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
                 budgetColSpent.textContent = 'เบิกจ่าย (เดือนนี้)';
                 budgetColRemainingPeriod.textContent = 'คงเหลือ/เดือน';
-                budgetColRemainingYear.textContent = 'คงเหลือ/ปี';
-            } else if (summaryType === 'quarter') {
-                budgetSummaryTitle.textContent = `สรุปงบประมาณรายบัญชี (ประจำไตรมาส ${selectedPeriod})`;
-                budgetColAnnual.textContent = 'งบประมาณรวม/ปี';
-                budgetColPeriod.innerHTML = 'งบประมาณ/ไตรมาส<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
-                budgetColSpent.textContent = 'เบิกจ่าย (ไตรมาสนี้)';
-                budgetColRemainingPeriod.textContent = 'คงเหลือ/ไตรมาส';
-                budgetColRemainingYear.textContent = 'คงเหลือ/ปี';
+            } else if (summaryStartDate.value && summaryEndDate.value) {
+                 budgetColPeriod.innerHTML = 'งบประมาณ (ช่วงที่เลือก)<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
+                 budgetColSpent.textContent = 'เบิกจ่าย (ช่วงนี้)';
+                 budgetColRemainingPeriod.textContent = 'คงเหลือ (ช่วงนี้)';
+            } else {
+                budgetColPeriod.innerHTML = 'งบประมาณ/ปี<br><span class="text-[9px]">(คิดเป็น 70% ของงบประมาณที่ได้รับ)</span>';
+                budgetColSpent.textContent = 'เบิกจ่ายสะสม';
+                budgetColRemainingPeriod.textContent = 'คงเหลือสะสม';
             }
+            
+            budgetColRemainingYear.textContent = 'คงเหลือ/ปี';
 
             let allRelevantCodes = [...new Set(summaryData.map(d => d.accountCode))].filter(c => c);
-            const categoryFilterValue = summaryCategoryFilter.value;
-
-            if (categoryFilterValue !== 'all') {
-                // Filter existing codes by category
-                allRelevantCodes = allRelevantCodes.filter(code => {
-                    const acc = accountData.find(a => a.code === code);
-                    return acc && acc.importantType === categoryFilterValue;
-                });
-
-                // Add all accounts in this category even if no spending
-                const categoryAccounts = accountData.filter(acc => acc.importantType === categoryFilterValue);
-                const categoryCodes = categoryAccounts.map(acc => acc.code);
-                allRelevantCodes = [...new Set([...allRelevantCodes, ...categoryCodes])];
-            }
 
             allRelevantCodes.forEach(code => {
                 const account = accountData.find(a => a.code === code);
@@ -450,13 +371,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let annualBudgetDisplay = annualBudgetForDept;
                 let periodBudgetDisplay = 0;
-                if (summaryType === 'all') {
-                    annualBudgetDisplay = annualBudgetForDept;
-                    periodBudgetDisplay = annualBudgetForDept * 0.70;
-                } else if (summaryType === 'monthly') {
+                
+                if (summaryMonth.value && !summaryStartDate.value) {
                     periodBudgetDisplay = (annualBudgetForDept / 12) * 0.70;
-                } else if (summaryType === 'quarter') {
-                    periodBudgetDisplay = (annualBudgetForDept / 4) * 0.70;
+                } else if (summaryStartDate.value && summaryEndDate.value) {
+                    // Approximate budget for range (days/365)
+                    const start = new Date(summaryStartDate.value);
+                    const end = new Date(summaryEndDate.value);
+                    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                    periodBudgetDisplay = (annualBudgetForDept * (days / 365)) * 0.70;
+                } else {
+                    periodBudgetDisplay = annualBudgetForDept * 0.70;
                 }
 
                 const periodSpent = summaryData
@@ -464,19 +389,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     .reduce((sum, d) => sum + parseFloat(d.price), 0);
 
                 let totalSpentYear = 0;
-                const currentYear = selectedPeriod.substring(0, 4);
-                if (summaryType === 'all') {
-                    totalSpentYear = periodSpent;
-                } else {
-                    totalSpentYear = disbursements
-                        .filter(d => {
-                            const codeMatch = d.accountCode === code;
-                            const yearMatch = d.date.startsWith(currentYear);
-                            const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
-                            return codeMatch && yearMatch && deptMatch;
-                        })
-                        .reduce((sum, d) => sum + parseFloat(d.price), 0);
-                }
+                const filterYear = currentYear;
+                totalSpentYear = disbursements
+                    .filter(d => {
+                        const codeMatch = d.accountCode === code;
+                        const yearMatch = d.date.startsWith(filterYear);
+                        const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
+                        return codeMatch && yearMatch && deptMatch;
+                    })
+                    .reduce((sum, d) => sum + parseFloat(d.price), 0);
+
 
                 const remainingPeriod = periodBudgetDisplay - periodSpent;
                 const remainingYear = annualBudgetForDept - totalSpentYear;
@@ -552,8 +474,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderTable = () => {
         tableBody.innerHTML = '';
-        const filterValue = statusFilter.value;
-        const filteredData = disbursements.filter(d => filterValue === 'all' || d.status === filterValue);
+        const searchQuery = (tableSearch?.value || '').toLowerCase().trim();
+        
+        const filteredData = disbursements.filter(d => {
+            if (!searchQuery) return true;
+            
+            const thaiDate = d.date.split('-').reverse().join('/');
+            const searchTerms = [
+                d.date,
+                thaiDate,
+                d.accountCode,
+                d.accountName,
+                d.costCenter,
+                d.description,
+                d.payee,
+                d.voucherNumber,
+                d.chequeNumber,
+                d.status
+            ].filter(v => v).map(v => v!.toString().toLowerCase());
+
+            return searchTerms.some(term => term.includes(searchQuery));
+        });
 
         if (filteredData.length === 0) {
             const colspan = sessionStorage.getItem('userRole') === 'admin' ? 9 : 8;
@@ -733,20 +674,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const populatePayeeFilter = () => {
-        const payees = [...new Set(disbursements.map(d => d.payee))];
-        summaryPayee.innerHTML = '<option value="">-- เลือกผู้รับเงิน --</option>';
-        payees.sort().forEach(payee => {
-            const option = document.createElement('option');
-            option.value = payee;
-            option.textContent = payee;
-            summaryPayee.appendChild(option);
-        });
-    };
-
     const resetForm = () => {
         form.reset();
         disbursementIdInput.value = '';
+        accountDetailsContainer.classList.add('hidden');
+        accountCodeInput.required = false;
+        costCenterInput.required = false;
         totalPriceInput.value = '';
         netTotalInput.value = '';
         attachmentInput.value = '';
@@ -837,6 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const disbursementData: Disbursement = {
             id: id,
+            budgetSource: budgetSourceInput.value,
             accountCode: accountCodeInput.value,
             accountName: accountNameInput.value,
             costCenter: costCenterInput.value,
@@ -914,6 +848,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!disbursement) return;
 
             disbursementIdInput.value = disbursement.id;
+            budgetSourceInput.value = disbursement.budgetSource || '';
+            if (disbursement.budgetSource === 'ต้นสังกัด') {
+                accountDetailsContainer.classList.remove('hidden');
+                accountCodeInput.required = true;
+                costCenterInput.required = true;
+            } else {
+                accountDetailsContainer.classList.add('hidden');
+                accountCodeInput.required = false;
+                costCenterInput.required = false;
+            }
             accountCodeInput.value = disbursement.accountCode || '';
             accountNameInput.value = disbursement.accountName || '';
             costCenterInput.value = disbursement.costCenter || '';
@@ -974,23 +918,43 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     cancelBtn.addEventListener('click', resetForm);
-    statusFilter.addEventListener('change', renderTable);
 
-    summaryTypeFilter.addEventListener('change', () => {
-        rangeFilterContainer.classList.add('hidden');
-        monthlyFilterContainer.classList.add('hidden');
-        quarterFilterContainer.classList.add('hidden');
-        payeeFilterContainer.classList.add('hidden');
-        switch (summaryTypeFilter.value) {
-            case 'range': rangeFilterContainer.classList.remove('hidden'); break;
-            case 'monthly': monthlyFilterContainer.classList.remove('hidden'); break;
-            case 'quarter': quarterFilterContainer.classList.remove('hidden'); break;
-            case 'payee': payeeFilterContainer.classList.remove('hidden'); break;
+    budgetSourceInput.addEventListener('change', () => {
+        if (budgetSourceInput.value === 'ต้นสังกัด') {
+            accountDetailsContainer.classList.remove('hidden');
+            accountCodeInput.required = true;
+            costCenterInput.required = true;
+        } else {
+            accountDetailsContainer.classList.add('hidden');
+            accountCodeInput.required = false;
+            costCenterInput.required = false;
+            // Optionally clear values if hidden? No, might want to keep if switching back.
+            // But if it's hidden and not required, we should clear it or make sure it's valid.
+            accountCodeInput.value = '';
+            accountNameInput.value = '';
+            costCenterInput.value = '';
+            if (budgetInfo) budgetInfo.classList.add('hidden');
         }
-        updateSummary();
     });
 
-    [summaryStartDate, summaryEndDate, summaryMonth, summaryQuarterYear, summaryQuarter, summaryPayee, summaryDeptFilter, summaryCategoryFilter].forEach(el => el.addEventListener('change', updateSummary));
+    // Add search listener
+    tableSearch.addEventListener('input', renderTable);
+
+    summaryDeptFilter.addEventListener('change', updateSummary);
+    summaryMonth.addEventListener('input', () => {
+        // If month is changed, clear range to avoid confusion
+        summaryStartDate.value = '';
+        summaryEndDate.value = '';
+        updateSummary();
+    });
+    summaryStartDate.addEventListener('input', () => {
+        summaryMonth.value = '';
+        updateSummary();
+    });
+    summaryEndDate.addEventListener('input', () => {
+        summaryMonth.value = '';
+        updateSummary();
+    });
 
     const exportToCsv = (filename: string, header: string[], rows: any[][]) => {
         const csvContent = [header.join(','), ...rows.map(row => 
@@ -1011,8 +975,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     exportRecordedDataBtn.addEventListener('click', () => {
-        const mainFilterValue = statusFilter.value;
-        const dataToExport = disbursements.filter(d => mainFilterValue === 'all' || d.status === mainFilterValue);
+        const searchQuery = (tableSearch?.value || '').toLowerCase().trim();
+        const dataToExport = disbursements.filter(d => {
+            if (!searchQuery) return true;
+            const thaiDate = d.date.split('-').reverse().join('/');
+            const searchTerms = [
+                d.date, thaiDate, d.accountCode, d.accountName, d.costCenter, d.description, 
+                d.payee, d.voucherNumber, d.chequeNumber, d.status
+            ].filter(v => v).map(v => v!.toString().toLowerCase());
+            return searchTerms.some(term => term.includes(searchQuery));
+        });
         
         const header = ["วันที่", "เลขที่ใบสำคัญจ่าย", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "เลขที่เช็ค", "สถานะ"];
         const rows = dataToExport.map(row => [
@@ -1037,53 +1009,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     exportDisbursementSummaryBtn.addEventListener('click', () => {
-        const mainFilterValue = statusFilter.value;
         const deptFilterValue = summaryDeptFilter.value;
+        const currentYear = "2026";
 
-        let filteredForSummary = disbursements.filter(d => {
-            const statusMatch = mainFilterValue === 'all' || d.status === mainFilterValue;
-            const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
-            return statusMatch && deptMatch;
-        });
-
-        const summaryType = summaryTypeFilter.value;
         let summaryData = [];
         let periodLabel = '';
 
-        switch (summaryType) {
-            case 'daily':
-                if (summaryDate.value) {
-                    periodLabel = summaryDate.value;
-                    summaryData = filteredForSummary.filter(d => d.date === summaryDate.value);
-                }
-                break;
-            case 'monthly':
-                if (summaryMonth.value) {
-                    periodLabel = summaryMonth.value;
-                    summaryData = filteredForSummary.filter(d => d.date.startsWith(periodLabel));
-                }
-                break;
-            case 'yearly':
-                if (summaryYear.value) {
-                    periodLabel = summaryYear.value;
-                    summaryData = filteredForSummary.filter(d => d.date.startsWith(periodLabel));
-                }
-                break;
-            case 'payee':
-                if (summaryPayee.value) {
-                    periodLabel = summaryPayee.value;
-                    summaryData = filteredForSummary.filter(d => d.payee === summaryPayee.value);
-                }
-                break;
-            default:
-                periodLabel = 'ทั้งหมด';
-                summaryData = [...filteredForSummary];
-                break;
+        const deptMatchFn = (d: Disbursement) => deptFilterValue === 'all' || d.costCenter === deptFilterValue;
+
+        if (summaryStartDate.value && summaryEndDate.value) {
+            const start = summaryStartDate.value;
+            const end = summaryEndDate.value;
+            periodLabel = `range_${start}_to_${end}`;
+            summaryData = disbursements.filter(d => deptMatchFn(d) && d.date >= start && d.date <= end);
+        } else if (summaryMonth.value) {
+            periodLabel = summaryMonth.value;
+            summaryData = disbursements.filter(d => deptMatchFn(d) && d.date.startsWith(periodLabel));
+        } else {
+            periodLabel = `year_${currentYear}`;
+            summaryData = disbursements.filter(d => deptMatchFn(d) && d.date.startsWith(currentYear));
         }
 
-        const header = ["วันที่", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
+        const header = ["วันที่", "เลขที่ใบสำคัญจ่าย", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
         const rows = summaryData.map(row => [
             row.date,
+            row.voucherNumber || '',
             row.accountCode || '',
             row.accountName || '',
             row.costCenter || '',
@@ -1102,43 +1052,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     exportBudgetSummaryBtn.addEventListener('click', () => {
-        const summaryType = summaryTypeFilter.value;
         const deptFilterValue = summaryDeptFilter.value;
+        const currentYear = "2026";
+        
+        let summaryData = [];
         let selectedPeriod = '';
-        
-        if (summaryType === 'monthly') selectedPeriod = summaryMonth.value;
-        else if (summaryType === 'yearly') selectedPeriod = summaryYear.value;
+        let isMonthly = false;
+        let isRange = false;
 
-        if (!selectedPeriod) {
-            alert('กรุณาเลือกเดือนหรือปีเพื่อดาวน์โหลดสรุปงบประมาณ');
-            return;
+        const deptMatchFn = (d: Disbursement) => deptFilterValue === 'all' || d.costCenter === deptFilterValue;
+
+        if (summaryStartDate.value && summaryEndDate.value) {
+            const start = summaryStartDate.value;
+            const end = summaryEndDate.value;
+            isRange = true;
+            selectedPeriod = `ช่วง_${start}_ถึง_${end}`;
+            summaryData = disbursements.filter(d => deptMatchFn(d) && d.date >= start && d.date <= end);
+        } else if (summaryMonth.value) {
+            isMonthly = true;
+            selectedPeriod = summaryMonth.value;
+            summaryData = disbursements.filter(d => deptMatchFn(d) && d.date.startsWith(selectedPeriod));
+        } else {
+            selectedPeriod = currentYear;
+            summaryData = disbursements.filter(d => deptMatchFn(d) && d.date.startsWith(selectedPeriod));
         }
 
-        const isYearly = summaryType === 'yearly';
-        const filteredForSummary = disbursements.filter(d => {
-            const statusMatch = statusFilter.value === 'all' || d.status === statusFilter.value;
-            const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
-            const periodMatch = d.date.startsWith(selectedPeriod);
-            return statusMatch && deptMatch && periodMatch;
-        });
-
-        let allRelevantCodes = [...new Set(filteredForSummary.map(d => d.accountCode))].filter(c => c);
-        const categoryFilterValue = summaryCategoryFilter.value;
-
-        if (categoryFilterValue !== 'all') {
-            // Filter existing codes by category
-            allRelevantCodes = allRelevantCodes.filter(code => {
-                const acc = accountData.find(a => a.code === code);
-                return acc && acc.importantType === categoryFilterValue;
-            });
-
-            // Add all accounts in this category even if no spending
-            const categoryAccounts = accountData.filter(acc => acc.importantType === categoryFilterValue);
-            const categoryCodes = categoryAccounts.map(acc => acc.code);
-            allRelevantCodes = [...new Set([...allRelevantCodes, ...categoryCodes])];
-        }
+        const header = ["รหัสบัญชี", "ชื่อบัญชี", "งบประมาณรวม/ปี", isMonthly ? "งบประมาณ (70%)" : isRange ? "งบประมาณ (70%)" : "งบประมาณ/ปี (70%)", isMonthly ? "เบิกจ่าย (เดือนนี้)" : isRange ? "เบิกจ่าย (ช่วงนี้)" : "เบิกจ่าย (ทั้งปี)", "คงเหลือสะสม", "คงเหลือ/ปี"];
         
-        const header = ["รหัสบัญชี", "ชื่อบัญชี", "งบประมาณรวม/ปี", isYearly ? "งบประมาณ/ปี" : "งบประมาณ/เดือน (70%)", isYearly ? "เบิกจ่าย (ทั้งปี)" : "เบิกจ่าย (เดือนนี้)", "คงเหลือ/เดือน", "คงเหลือ/ปี"];
+        const allRelevantCodes = [...new Set(summaryData.map(d => d.accountCode))].filter(c => c);
+
         const rows = allRelevantCodes.map(code => {
             const account = accountData.find(a => a.code === code);
             if (!account) return null;
@@ -1150,31 +1092,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 annualBudgetForDept = account.budgets[deptFilterValue] || 0;
             }
 
-            const monthlyBudgetFull = annualBudgetForDept / 12;
-            const monthlyBudget70 = monthlyBudgetFull * 0.70;
-            const periodBudgetDisplay = isYearly ? annualBudgetForDept : monthlyBudget70;
+            let periodBudgetDisplay = 0;
+            if (isMonthly) {
+                periodBudgetDisplay = (annualBudgetForDept / 12) * 0.70;
+            } else if (isRange) {
+                const start = new Date(summaryStartDate.value);
+                const end = new Date(summaryEndDate.value);
+                const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                periodBudgetDisplay = (annualBudgetForDept * (days / 365)) * 0.70;
+            } else {
+                periodBudgetDisplay = annualBudgetForDept * 0.70;
+            }
 
-            const periodSpent = filteredForSummary
+            const periodSpent = summaryData
                 .filter(d => d.accountCode === code)
                 .reduce((sum, d) => sum + parseFloat(d.price), 0);
 
-            let totalSpentYear = 0;
-            const currentYear = selectedPeriod.substring(0, 4);
-            if (isYearly) {
-                totalSpentYear = periodSpent;
-            } else {
-                totalSpentYear = disbursements
-                    .filter(d => {
-                        const codeMatch = d.accountCode === code;
-                        const yearMatch = d.date.startsWith(currentYear);
-                        const deptMatch = deptFilterValue === 'all' || d.costCenter === deptFilterValue;
-                        return codeMatch && yearMatch && deptMatch;
-                    })
-                    .reduce((sum, d) => sum + parseFloat(d.price), 0);
-            }
-
-            const remainingMonth = monthlyBudget70 - (isYearly ? (periodSpent / 12) : periodSpent);
-            const remainingYear = annualBudgetForDept - totalSpentYear;
+            const totalSpentYear = disbursements
+                .filter(d => d.accountCode === code && d.date.startsWith(currentYear) && deptMatchFn(d))
+                .reduce((sum, d) => sum + parseFloat(d.price), 0);
 
             return [
                 code,
@@ -1182,12 +1118,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 annualBudgetForDept,
                 periodBudgetDisplay,
                 periodSpent,
-                remainingMonth,
-                remainingYear
+                periodBudgetDisplay - periodSpent,
+                annualBudgetForDept - totalSpentYear
             ];
-        }).filter(r => r !== null) as any[][];
+        }).filter(r => r !== null);
 
-        exportToCsv(`budget_summary_${selectedPeriod}.csv`, header, rows);
+        exportToCsv(`budget_summary_${selectedPeriod}.csv`, header, rows as any[][]);
     });
 
     // Settings Modal Logic
