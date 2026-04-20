@@ -549,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filteredData = disbursements.filter(d => filterValue === 'all' || d.status === filterValue);
 
         if (filteredData.length === 0) {
-            const colspan = sessionStorage.getItem('userRole') === 'admin' ? 8 : 7;
+            const colspan = sessionStorage.getItem('userRole') === 'admin' ? 9 : 8;
             tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-gray-500">ไม่พบรายการ</td></tr>`;
         }
 
@@ -558,7 +558,9 @@ document.addEventListener('DOMContentLoaded', () => {
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">${d.date}</div>
-                    ${d.voucherNumber ? `<div class="text-xs text-indigo-600 font-medium">${d.voucherNumber}</div>` : ''}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-indigo-600 font-medium">${d.voucherNumber || '-'}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900 font-medium">${d.accountCode || '-'}</div>
