@@ -213,8 +213,15 @@ document.addEventListener('DOMContentLoaded', () => {
         onSnapshot(collection(db, 'disbursements'), (snapshot) => {
             console.log('Disbursements snapshot received, size:', snapshot.size);
             disbursements = snapshot.docs.map(doc => doc.data() as Disbursement);
-            // Sort by date descending
-            disbursements.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            // Sort by voucher number descending primarily, then by date descending
+            disbursements.sort((a, b) => {
+                const vA = a.voucherNumber || '';
+                const vB = b.voucherNumber || '';
+                if (vA !== vB) {
+                    return vB.localeCompare(vA, undefined, { numeric: true, sensitivity: 'base' });
+                }
+                return new Date(b.date).getTime() - new Date(a.date).getTime();
+            });
             renderTable();
             updateSummary();
             populatePayeeFilter();
