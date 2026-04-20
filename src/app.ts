@@ -82,6 +82,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const attachmentContainer = document.getElementById('attachment-container')!;
     const attachmentInput = document.getElementById('attachment') as HTMLInputElement;
     const attachmentNameDisplay = document.getElementById('attachment-name')!;
+    const attachmentTypeRadios = document.querySelectorAll('input[name="attachment-type"]') as NodeListOf<HTMLInputElement>;
+    const attachmentFileDiv = document.getElementById('attachment-file-div')!;
+    const attachmentLinkDiv = document.getElementById('attachment-link-div')!;
+    const attachmentUrlInput = document.getElementById('attachment-url') as HTMLInputElement;
     const statusRadios = document.querySelectorAll('input[name="status"]') as NodeListOf<HTMLInputElement>;
 
     // Tab Elements
@@ -496,6 +500,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const openAttachment = (dataUrl: string, filename: string) => {
         if (!dataUrl) return;
         
+        // If it's a regular URL, just open it
+        if (!dataUrl.startsWith('data:')) {
+            window.open(dataUrl, '_blank');
+            return;
+        }
+
         try {
             // Convert Data URL to Blob for better mobile support
             const arr = dataUrl.split(',');
@@ -712,8 +722,12 @@ document.addEventListener('DOMContentLoaded', () => {
         totalPriceInput.value = '';
         netTotalInput.value = '';
         attachmentInput.value = '';
+        attachmentUrlInput.value = '';
         attachmentNameDisplay.textContent = '';
         attachmentContainer.classList.add('hidden');
+        attachmentFileDiv.classList.remove('hidden');
+        attachmentLinkDiv.classList.add('hidden');
+        (document.querySelector('input[name="attachment-type"][value="file"]') as HTMLInputElement).checked = true;
         if (budgetInfo) budgetInfo.classList.add('hidden');
         (document.querySelector('input[name="status"][value="กำลังดำเนินการ"]') as HTMLInputElement).checked = true;
         formTitle.textContent = 'บันทึกข้อมูล';
@@ -728,11 +742,27 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             attachmentContainer.classList.add('hidden');
             attachmentInput.value = '';
+            attachmentUrlInput.value = '';
+            attachmentNameDisplay.textContent = '';
+        }
+    };
+
+    const handleAttachmentTypeChange = () => {
+        const selectedType = (document.querySelector('input[name="attachment-type"]:checked') as HTMLInputElement).value;
+        if (selectedType === 'file') {
+            attachmentFileDiv.classList.remove('hidden');
+            attachmentLinkDiv.classList.add('hidden');
+            attachmentUrlInput.value = '';
+        } else {
+            attachmentFileDiv.classList.add('hidden');
+            attachmentLinkDiv.classList.remove('hidden');
+            attachmentInput.value = '';
             attachmentNameDisplay.textContent = '';
         }
     };
 
     statusRadios.forEach(radio => radio.addEventListener('change', handleStatusChange));
+    attachmentTypeRadios.forEach(radio => radio.addEventListener('change', handleAttachmentTypeChange));
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -745,15 +775,17 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalAttachmentName = null;
 
         const file = attachmentInput.files?.[0];
+        const attachmentType = (document.querySelector('input[name="attachment-type"]:checked') as HTMLInputElement).value;
+        const attachmentUrl = attachmentUrlInput.value.trim();
 
         if (selectedStatus === 'เสร็จสิ้น') {
-            if (file) {
+            if (attachmentType === 'file' && file) {
                 if (file.type !== 'application/pdf') {
                     alert('กรุณาเลือกไฟล์ PDF เท่านั้น');
                     return;
                 }
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('ขนาดไฟล์ต้องไม่เกิน 5 MB');
+                if (file.size > 700 * 1024) {
+                    alert('เนื่องจากข้อจำกัดของระบบฐานข้อมูล ไฟล์แนบต้องมีขนาดไม่เกิน 700 KB ต่อ 1 รายการ\nกรุณาลดขนาดไฟล์ PDF หรือแยกรายการบันทึก');
                     return;
                 }
                 finalAttachmentData = await new Promise((resolve, reject) => {
@@ -763,6 +795,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     reader.readAsDataURL(file);
                 });
                 finalAttachmentName = file.name;
+            } else if (attachmentType === 'link' && attachmentUrl) {
+                finalAttachmentData = attachmentUrl;
+                finalAttachmentName = 'ลิงก์ภายนอก';
             } else if (existingDisbursement) {
                 finalAttachmentData = existingDisbursement.attachment;
                 finalAttachmentName = existingDisbursement.attachmentName;
@@ -861,7 +896,23 @@ document.addEventListener('DOMContentLoaded', () => {
             (document.querySelector(`input[name="status"][value="${disbursement.status}"]`) as HTMLInputElement).checked = true;
             
             handleStatusChange();
-            attachmentNameDisplay.textContent = disbursement.attachmentName ? `ไฟล์ปัจจุบัน: ${disbursement.attachmentName}` : '';
+            
+            if (disbursement.attachment) {
+                if (disbursement.attachment.startsWith('data:')) {
+                    (document.querySelector('input[name="attachment-type"][value="file"]') as HTMLInputElement).checked = true;
+                    attachmentNameDisplay.textContent = disbursement.attachmentName ? `ไฟล์ปัจจุบัน: ${disbursement.attachmentName}` : '';
+                    attachmentUrlInput.value = '';
+                } else {
+                    (document.querySelector('input[name="attachment-type"][value="link"]') as HTMLInputElement).checked = true;
+                    attachmentUrlInput.value = disbursement.attachment;
+                    attachmentNameDisplay.textContent = '';
+                }
+            } else {
+                (document.querySelector('input[name="attachment-type"][value="file"]') as HTMLInputElement).checked = true;
+                attachmentNameDisplay.textContent = '';
+                attachmentUrlInput.value = '';
+            }
+            handleAttachmentTypeChange();
             attachmentInput.value = '';
 
             formTitle.textContent = 'แก้ไขรายการ';
