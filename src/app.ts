@@ -21,10 +21,10 @@ interface Disbursement {
   payee: string;
   paymentMethod: string;
   chequeNumber?: string;
-  status: string;
   attachment: string | null;
   attachmentName: string | null;
   budgetSource?: string;
+  wbs?: string;
   createdAt?: any;
 }
 
@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const attachmentFileDiv = document.getElementById('attachment-file-div')!;
     const attachmentLinkDiv = document.getElementById('attachment-link-div')!;
     const attachmentUrlInput = document.getElementById('attachment-url') as HTMLInputElement;
-    const statusRadios = document.querySelectorAll('input[name="status"]') as NodeListOf<HTMLInputElement>;
 
     // Tab Elements
     const tabEntryBtn = document.getElementById('tab-entry-btn')!;
@@ -88,29 +87,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabSummaryContent = document.getElementById('tab-summary-content')!;
 
     // Tab Logic
-    tabEntryBtn.addEventListener('click', () => {
-        tabEntryContent.classList.remove('hidden');
+    const switchTab = (activeTab: 'entry' | 'summary') => {
+        // Hide all
+        tabEntryContent.classList.add('hidden');
         tabSummaryContent.classList.add('hidden');
         
-        tabEntryBtn.classList.add('bg-white', 'text-indigo-900', 'shadow-md');
-        tabEntryBtn.classList.remove('text-white', 'hover:bg-white/10');
+        // Reset buttons
+        [tabEntryBtn, tabSummaryBtn].forEach(btn => {
+            btn.classList.remove('bg-white', 'text-indigo-900', 'shadow-md');
+            btn.classList.add('text-white', 'hover:bg-white/10');
+        });
         
-        tabSummaryBtn.classList.remove('bg-white', 'text-indigo-900', 'shadow-md');
-        tabSummaryBtn.classList.add('text-white', 'hover:bg-white/10');
-    });
+        // Show active
+        if (activeTab === 'entry') {
+            tabEntryContent.classList.remove('hidden');
+            tabEntryBtn.classList.add('bg-white', 'text-indigo-900', 'shadow-md');
+            tabEntryBtn.classList.remove('text-white', 'hover:bg-white/10');
+        } else if (activeTab === 'summary') {
+            tabSummaryContent.classList.remove('hidden');
+            tabSummaryBtn.classList.add('bg-white', 'text-indigo-900', 'shadow-md');
+            tabSummaryBtn.classList.remove('text-white', 'hover:bg-white/10');
+            updateSummary();
+        }
+    };
 
-    tabSummaryBtn.addEventListener('click', () => {
-        tabEntryContent.classList.add('hidden');
-        tabSummaryContent.classList.remove('hidden');
-        
-        tabSummaryBtn.classList.add('bg-white', 'text-indigo-900', 'shadow-md');
-        tabSummaryBtn.classList.remove('text-white', 'hover:bg-white/10');
-        
-        tabEntryBtn.classList.remove('bg-white', 'text-indigo-900', 'shadow-md');
-        tabEntryBtn.classList.add('text-white', 'hover:bg-white/10');
-    });
+    tabEntryBtn.addEventListener('click', () => switchTab('entry'));
+    tabSummaryBtn.addEventListener('click', () => switchTab('summary'));
 
     const budgetSourceInput = document.getElementById('budget-source') as HTMLSelectElement;
+    const wbsContainer = document.getElementById('wbs-container')!;
+    const wbsInput = document.getElementById('wbs') as HTMLInputElement;
     const accountDetailsContainer = document.getElementById('account-details-container')!;
     const accountCodeInput = document.getElementById('account-code') as HTMLInputElement;
     const accountNameInput = document.getElementById('account-name') as HTMLInputElement;
@@ -130,6 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let disbursements: Disbursement[] = [];
     let accountData: Account[] = [];
     let users: User[] = [];
+    
+    // Pagination State
+    let currentPage = 1;
+    const itemsPerPage = 10;
 
     const defaultAccountData: Account[] = [
         { code: "52010030", name: "ค่าล่วงเวลาพนักงาน", importantType: 'operating', budgets: { "ผบง.": 50000, "กบห.": 0, "ผปร.": 480000, "ผบค.": 370000 } },
@@ -476,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tableBody.innerHTML = '';
         const searchQuery = (tableSearch?.value || '').toLowerCase().trim();
         
-        const filteredData = disbursements.filter(d => {
+        const filteredAll = disbursements.filter(d => {
             if (!searchQuery) return true;
             
             const thaiDate = d.date.split('-').reverse().join('/');
@@ -486,19 +496,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 d.accountCode,
                 d.accountName,
                 d.costCenter,
+                d.wbs,
                 d.description,
                 d.payee,
                 d.voucherNumber,
-                d.chequeNumber,
-                d.status
+                d.chequeNumber
             ].filter(v => v).map(v => v!.toString().toLowerCase());
 
             return searchTerms.some(term => term.includes(searchQuery));
         });
 
-        if (filteredData.length === 0) {
-            const colspan = sessionStorage.getItem('userRole') === 'admin' ? 9 : 8;
+        // Pagination Logic
+        const totalItems = filteredAll.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        
+        // Ensure currentPage is valid
+        if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+        const filteredData = filteredAll.slice(startIndex, endIndex);
+
+        if (totalItems === 0) {
+            const colspan = sessionStorage.getItem('userRole') === 'admin' ? 8 : 7;
             tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-10 text-gray-500">ไม่พบรายการ</td></tr>`;
+            updatePaginationUI(0, 0, 0, 0);
+            return;
         }
 
         filteredData.forEach(d => {
@@ -513,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900 font-medium">${d.accountCode || '-'}</div>
                     <div class="text-xs text-gray-500">${d.costCenter || '-'}</div>
+                    ${d.wbs ? `<div class="text-[10px] text-indigo-600 font-medium mt-1">WBS: ${d.wbs}</div>` : ''}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900 font-medium">${d.description}</div>
@@ -526,15 +551,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${parseFloat(d.netTotal).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        d.status === 'เสร็จสิ้น' ? 'bg-green-100 text-green-800' :
-                        d.status === 'กำลังดำเนินการ' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                    }">
-                        ${d.status}
-                    </span>
-                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     ${d.attachment ? `<button class="view-attachment-btn text-indigo-600 hover:text-indigo-900 inline-flex items-center space-x-1" data-id="${d.id}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h4"/><path d="M10 16h4"/><path d="M12 10v6"/></svg> <span>ดูไฟล์</span></button>` : 'ไม่มี'}
                 </td>
@@ -553,6 +569,68 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             tableBody.appendChild(row);
         });
+
+        updatePaginationUI(startIndex + 1, endIndex, totalItems, totalPages);
+    };
+
+    const updatePaginationUI = (start: number, end: number, total: number, totalPages: number) => {
+        const pStart = document.getElementById('pagination-start')!;
+        const pEnd = document.getElementById('pagination-end')!;
+        const pTotal = document.getElementById('pagination-total')!;
+        const pNumbers = document.getElementById('pagination-numbers')!;
+        const prevMobile = document.getElementById('prev-page-mobile') as HTMLButtonElement;
+        const nextMobile = document.getElementById('next-page-mobile') as HTMLButtonElement;
+
+        pStart.textContent = start.toString();
+        pEnd.textContent = end.toString();
+        pTotal.textContent = total.toString();
+
+        prevMobile.disabled = currentPage === 1;
+        nextMobile.disabled = currentPage === totalPages || totalPages === 0;
+
+        pNumbers.innerHTML = '';
+        
+        if (totalPages <= 1) return;
+
+        // Previous Button
+        const prevBtn = document.createElement('button');
+        prevBtn.className = `relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50`;
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.innerHTML = '<svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" /></svg>';
+        prevBtn.onclick = () => { currentPage--; renderTable(); };
+        pNumbers.appendChild(prevBtn);
+
+        // Page Numbers Logic (showing a window of pages)
+        const maxPagesToShow = 5;
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+        
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            const isActive = i === currentPage;
+            pageBtn.className = isActive 
+                ? 'relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                : 'relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0';
+            pageBtn.textContent = i.toString();
+            pageBtn.onclick = () => { currentPage = i; renderTable(); };
+            pNumbers.appendChild(pageBtn);
+        }
+
+        // Next Button
+        const nextBtn = document.createElement('button');
+        nextBtn.className = `relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50`;
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.innerHTML = '<svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>';
+        nextBtn.onclick = () => { currentPage++; renderTable(); };
+        pNumbers.appendChild(nextBtn);
+
+        // Mobile Handlers
+        prevMobile.onclick = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
+        nextMobile.onclick = () => { if (currentPage < totalPages) { currentPage++; renderTable(); } };
     };
 
     const applyPermissions = () => {
@@ -677,9 +755,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetForm = () => {
         form.reset();
         disbursementIdInput.value = '';
+        wbsContainer.classList.add('hidden');
         accountDetailsContainer.classList.add('hidden');
         accountCodeInput.required = false;
         costCenterInput.required = false;
+        wbsInput.required = false;
         totalPriceInput.value = '';
         netTotalInput.value = '';
         attachmentInput.value = '';
@@ -688,27 +768,14 @@ document.addEventListener('DOMContentLoaded', () => {
         chequeNumberInput.value = '';
         chequeNumberContainer.classList.add('hidden');
         attachmentNameDisplay.textContent = '';
-        attachmentContainer.classList.add('hidden');
+        attachmentContainer.classList.remove('hidden');
         attachmentFileDiv.classList.remove('hidden');
         attachmentLinkDiv.classList.add('hidden');
         (document.querySelector('input[name="attachment-type"][value="file"]') as HTMLInputElement).checked = true;
         if (budgetInfo) budgetInfo.classList.add('hidden');
-        (document.querySelector('input[name="status"][value="กำลังดำเนินการ"]') as HTMLInputElement).checked = true;
         formTitle.textContent = 'บันทึกข้อมูล';
         submitBtn.textContent = 'บันทึก';
         cancelBtn.style.display = 'none';
-    };
-
-    const handleStatusChange = () => {
-        const selectedStatus = (document.querySelector('input[name="status"]:checked') as HTMLInputElement).value;
-        if (selectedStatus === 'เสร็จสิ้น') {
-            attachmentContainer.classList.remove('hidden');
-        } else {
-            attachmentContainer.classList.add('hidden');
-            attachmentInput.value = '';
-            attachmentUrlInput.value = '';
-            attachmentNameDisplay.textContent = '';
-        }
     };
 
     const handleAttachmentTypeChange = () => {
@@ -725,14 +792,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    statusRadios.forEach(radio => radio.addEventListener('change', handleStatusChange));
     attachmentTypeRadios.forEach(radio => radio.addEventListener('change', handleAttachmentTypeChange));
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const id = disbursementIdInput.value || Date.now().toString();
-        const selectedStatus = (document.querySelector('input[name="status"]:checked') as HTMLInputElement).value;
         const existingDisbursement = disbursements.find(d => d.id === id);
 
         let finalAttachmentData = null;
@@ -742,35 +807,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const attachmentType = (document.querySelector('input[name="attachment-type"]:checked') as HTMLInputElement).value;
         const attachmentUrl = attachmentUrlInput.value.trim();
 
-        if (selectedStatus === 'เสร็จสิ้น') {
-            if (attachmentType === 'file' && file) {
-                if (file.type !== 'application/pdf') {
-                    alert('กรุณาเลือกไฟล์ PDF เท่านั้น');
-                    return;
-                }
-                if (file.size > 700 * 1024) {
-                    alert('เนื่องจากข้อจำกัดของระบบฐานข้อมูล ไฟล์แนบต้องมีขนาดไม่เกิน 700 KB ต่อ 1 รายการ\nกรุณาลดขนาดไฟล์ PDF หรือแยกรายการบันทึก');
-                    return;
-                }
-                finalAttachmentData = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = event => resolve(event.target?.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-                finalAttachmentName = file.name;
-            } else if (attachmentType === 'link' && attachmentUrl) {
-                finalAttachmentData = attachmentUrl;
-                finalAttachmentName = 'ลิงก์ภายนอก';
-            } else if (existingDisbursement) {
-                finalAttachmentData = existingDisbursement.attachment;
-                finalAttachmentName = existingDisbursement.attachmentName;
+        if (attachmentType === 'file' && file) {
+            if (file.type !== 'application/pdf') {
+                alert('กรุณาเลือกไฟล์ PDF เท่านั้น');
+                return;
             }
+            if (file.size > 700 * 1024) {
+                alert('เนื่องจากข้อจำกัดของระบบฐานข้อมูล ไฟล์แนบต้องมีขนาดไม่เกิน 700 KB ต่อ 1 รายการ\nกรุณาลดขนาดไฟล์ PDF หรือแยกรายการบันทึก');
+                return;
+            }
+            finalAttachmentData = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = event => resolve(event.target?.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+            finalAttachmentName = file.name;
+        } else if (attachmentType === 'link' && attachmentUrl) {
+            finalAttachmentData = attachmentUrl;
+            finalAttachmentName = 'ลิงก์ภายนอก';
+        } else if (existingDisbursement) {
+            finalAttachmentData = existingDisbursement.attachment;
+            finalAttachmentName = existingDisbursement.attachmentName;
         }
 
         const disbursementData: Disbursement = {
             id: id,
             budgetSource: budgetSourceInput.value,
+            wbs: budgetSourceInput.value === 'หมายเลขงาน' ? wbsInput.value : undefined,
             accountCode: accountCodeInput.value,
             accountName: accountNameInput.value,
             costCenter: costCenterInput.value,
@@ -785,7 +849,6 @@ document.addEventListener('DOMContentLoaded', () => {
             payee: (document.getElementById('payee') as HTMLInputElement).value,
             paymentMethod: paymentMethodInput.value,
             chequeNumber: paymentMethodInput.value === 'เช็ค' ? chequeNumberInput.value : '',
-            status: selectedStatus,
             attachment: finalAttachmentData as string | null,
             attachmentName: finalAttachmentName,
             createdAt: existingDisbursement?.createdAt || serverTimestamp()
@@ -849,15 +912,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             disbursementIdInput.value = disbursement.id;
             budgetSourceInput.value = disbursement.budgetSource || '';
+            
+            // Toggle containers based on budget source
             if (disbursement.budgetSource === 'ต้นสังกัด') {
                 accountDetailsContainer.classList.remove('hidden');
+                wbsContainer.classList.add('hidden');
                 accountCodeInput.required = true;
                 costCenterInput.required = true;
-            } else {
+                wbsInput.required = false;
+            } else if (disbursement.budgetSource === 'หมายเลขงาน') {
                 accountDetailsContainer.classList.add('hidden');
+                wbsContainer.classList.remove('hidden');
                 accountCodeInput.required = false;
                 costCenterInput.required = false;
+                wbsInput.required = true;
+                wbsInput.value = disbursement.wbs || '';
+            } else {
+                accountDetailsContainer.classList.add('hidden');
+                wbsContainer.classList.add('hidden');
+                accountCodeInput.required = false;
+                costCenterInput.required = false;
+                wbsInput.required = false;
             }
+
             accountCodeInput.value = disbursement.accountCode || '';
             accountNameInput.value = disbursement.accountName || '';
             costCenterInput.value = disbursement.costCenter || '';
@@ -879,10 +956,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 chequeNumberContainer.classList.add('hidden');
                 chequeNumberInput.value = '';
             }
-
-            (document.querySelector(`input[name="status"][value="${disbursement.status}"]`) as HTMLInputElement).checked = true;
-            
-            handleStatusChange();
             
             if (disbursement.attachment) {
                 if (disbursement.attachment.startsWith('data:')) {
@@ -922,23 +995,41 @@ document.addEventListener('DOMContentLoaded', () => {
     budgetSourceInput.addEventListener('change', () => {
         if (budgetSourceInput.value === 'ต้นสังกัด') {
             accountDetailsContainer.classList.remove('hidden');
+            wbsContainer.classList.add('hidden');
             accountCodeInput.required = true;
             costCenterInput.required = true;
-        } else {
+            wbsInput.required = false;
+        } else if (budgetSourceInput.value === 'หมายเลขงาน') {
             accountDetailsContainer.classList.add('hidden');
+            wbsContainer.classList.remove('hidden');
             accountCodeInput.required = false;
             costCenterInput.required = false;
-            // Optionally clear values if hidden? No, might want to keep if switching back.
-            // But if it's hidden and not required, we should clear it or make sure it's valid.
+            wbsInput.required = true;
+            // Clear other fields
             accountCodeInput.value = '';
             accountNameInput.value = '';
             costCenterInput.value = '';
+            if (budgetInfo) budgetInfo.classList.add('hidden');
+        } else {
+            accountDetailsContainer.classList.add('hidden');
+            wbsContainer.classList.add('hidden');
+            accountCodeInput.required = false;
+            costCenterInput.required = false;
+            wbsInput.required = false;
+            // Clear all
+            accountCodeInput.value = '';
+            accountNameInput.value = '';
+            costCenterInput.value = '';
+            wbsInput.value = '';
             if (budgetInfo) budgetInfo.classList.add('hidden');
         }
     });
 
     // Add search listener
-    tableSearch.addEventListener('input', renderTable);
+    tableSearch.addEventListener('input', () => {
+        currentPage = 1;
+        renderTable();
+    });
 
     summaryDeptFilter.addEventListener('change', updateSummary);
     summaryMonth.addEventListener('input', () => {
@@ -981,12 +1072,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const thaiDate = d.date.split('-').reverse().join('/');
             const searchTerms = [
                 d.date, thaiDate, d.accountCode, d.accountName, d.costCenter, d.description, 
-                d.payee, d.voucherNumber, d.chequeNumber, d.status
+                d.payee, d.voucherNumber, d.chequeNumber
             ].filter(v => v).map(v => v!.toString().toLowerCase());
             return searchTerms.some(term => term.includes(searchQuery));
         });
         
-        const header = ["วันที่", "เลขที่ใบสำคัญจ่าย", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "เลขที่เช็ค", "สถานะ"];
+        const header = ["วันที่", "เลขที่ใบสำคัญจ่าย", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "เลขที่เช็ค"];
         const rows = dataToExport.map(row => [
             row.date,
             row.voucherNumber || '',
@@ -1001,8 +1092,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.netTotal,
             row.payee,
             row.paymentMethod,
-            row.chequeNumber || '',
-            row.status
+            row.chequeNumber || ''
         ]);
         
         exportToCsv('recorded_data.csv', header, rows);
@@ -1030,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             summaryData = disbursements.filter(d => deptMatchFn(d) && d.date.startsWith(currentYear));
         }
 
-        const header = ["วันที่", "เลขที่ใบสำคัญจ่าย", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
+        const header = ["วันที่", "เลขที่ใบสำคัญจ่าย", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย"];
         const rows = summaryData.map(row => [
             row.date,
             row.voucherNumber || '',
@@ -1044,8 +1134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.wht,
             row.netTotal,
             row.payee,
-            row.paymentMethod,
-            row.status
+            row.paymentMethod
         ]);
 
         exportToCsv(`disbursement_summary_${periodLabel}.csv`, header, rows);
