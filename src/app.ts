@@ -11,6 +11,7 @@ interface Disbursement {
   accountName: string;
   costCenter: string;
   date: string;
+  voucherNumber?: string;
   description: string;
   price: string;
   tax: string;
@@ -19,6 +20,7 @@ interface Disbursement {
   netTotal: string;
   payee: string;
   paymentMethod: string;
+  chequeNumber?: string;
   status: string;
   attachment: string | null;
   attachmentName: string | null;
@@ -120,6 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const accountCodeInput = document.getElementById('account-code') as HTMLInputElement;
     const accountNameInput = document.getElementById('account-name') as HTMLInputElement;
     const costCenterInput = document.getElementById('cost-center') as HTMLSelectElement;
+    const voucherNumberInput = document.getElementById('voucher-number') as HTMLInputElement;
+    const paymentMethodInput = document.getElementById('payment-method') as HTMLSelectElement;
+    const chequeNumberContainer = document.getElementById('cheque-number-container')!;
+    const chequeNumberInput = document.getElementById('cheque-number') as HTMLInputElement;
     const accountCodesDatalist = document.getElementById('account-codes')!;
     const budgetInfo = document.getElementById('budget-info');
     const budgetAllocatedDisplay = document.getElementById('budget-allocated');
@@ -552,6 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">${d.date}</div>
+                    ${d.voucherNumber ? `<div class="text-xs text-indigo-600 font-medium">${d.voucherNumber}</div>` : ''}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900 font-medium">${d.accountCode || '-'}</div>
@@ -563,7 +570,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900">${d.payee}</div>
-                    <div class="text-xs text-gray-500">${d.paymentMethod}</div>
+                    <div class="text-xs text-gray-500">
+                        ${d.paymentMethod}
+                        ${d.paymentMethod === 'เช็ค' && d.chequeNumber ? `<span class="text-indigo-600 ml-1">#${d.chequeNumber}</span>` : ''}
+                    </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${parseFloat(d.netTotal).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -705,6 +715,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     costCenterInput.addEventListener('change', updateBudgetInfo);
 
+    paymentMethodInput.addEventListener('change', () => {
+        if (paymentMethodInput.value === 'เช็ค') {
+            chequeNumberContainer.classList.remove('hidden');
+        } else {
+            chequeNumberContainer.classList.add('hidden');
+            chequeNumberInput.value = '';
+        }
+    });
+
     const populatePayeeFilter = () => {
         const payees = [...new Set(disbursements.map(d => d.payee))];
         summaryPayee.innerHTML = '<option value="">-- เลือกผู้รับเงิน --</option>';
@@ -723,6 +742,9 @@ document.addEventListener('DOMContentLoaded', () => {
         netTotalInput.value = '';
         attachmentInput.value = '';
         attachmentUrlInput.value = '';
+        voucherNumberInput.value = '';
+        chequeNumberInput.value = '';
+        chequeNumberContainer.classList.add('hidden');
         attachmentNameDisplay.textContent = '';
         attachmentContainer.classList.add('hidden');
         attachmentFileDiv.classList.remove('hidden');
@@ -810,6 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
             accountName: accountNameInput.value,
             costCenter: costCenterInput.value,
             date: (document.getElementById('date') as HTMLInputElement).value,
+            voucherNumber: voucherNumberInput.value,
             description: (document.getElementById('description') as HTMLInputElement).value,
             price: priceInput.value,
             tax: taxInput.value,
@@ -817,7 +840,8 @@ document.addEventListener('DOMContentLoaded', () => {
             wht: whtInput.value,
             netTotal: netTotalInput.value,
             payee: (document.getElementById('payee') as HTMLInputElement).value,
-            paymentMethod: (document.getElementById('payment-method') as HTMLSelectElement).value,
+            paymentMethod: paymentMethodInput.value,
+            chequeNumber: paymentMethodInput.value === 'เช็ค' ? chequeNumberInput.value : '',
             status: selectedStatus,
             attachment: finalAttachmentData as string | null,
             attachmentName: finalAttachmentName,
@@ -885,6 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
             accountNameInput.value = disbursement.accountName || '';
             costCenterInput.value = disbursement.costCenter || '';
             (document.getElementById('date') as HTMLInputElement).value = disbursement.date;
+            voucherNumberInput.value = disbursement.voucherNumber || '';
             (document.getElementById('description') as HTMLInputElement).value = disbursement.description;
             priceInput.value = disbursement.price;
             taxInput.value = disbursement.tax;
@@ -892,7 +917,16 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateAmounts();
             updateBudgetInfo();
             (document.getElementById('payee') as HTMLInputElement).value = disbursement.payee;
-            (document.getElementById('payment-method') as HTMLSelectElement).value = disbursement.paymentMethod;
+            paymentMethodInput.value = disbursement.paymentMethod;
+            
+            if (disbursement.paymentMethod === 'เช็ค') {
+                chequeNumberContainer.classList.remove('hidden');
+                chequeNumberInput.value = disbursement.chequeNumber || '';
+            } else {
+                chequeNumberContainer.classList.add('hidden');
+                chequeNumberInput.value = '';
+            }
+
             (document.querySelector(`input[name="status"][value="${disbursement.status}"]`) as HTMLInputElement).checked = true;
             
             handleStatusChange();
@@ -971,9 +1005,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainFilterValue = statusFilter.value;
         const dataToExport = disbursements.filter(d => mainFilterValue === 'all' || d.status === mainFilterValue);
         
-        const header = ["วันที่", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "สถานะ"];
+        const header = ["วันที่", "เลขที่ใบสำคัญจ่าย", "รหัสบัญชี", "ชื่อบัญชี", "ศูนย์ต้นทุน", "รายละเอียด", "ราคา", "ภาษี (%)", "ราคารวม VAT", "หัก ณ ที่จ่าย (%)", "ยอดสุทธิ", "ผู้รับเงิน", "รูปแบบการจ่าย", "เลขที่เช็ค", "สถานะ"];
         const rows = dataToExport.map(row => [
             row.date,
+            row.voucherNumber || '',
             row.accountCode || '',
             row.accountName || '',
             row.costCenter || '',
@@ -985,6 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.netTotal,
             row.payee,
             row.paymentMethod,
+            row.chequeNumber || '',
             row.status
         ]);
         

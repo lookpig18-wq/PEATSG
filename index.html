@@ -102,9 +102,15 @@
                                 <option value="ผบค.">ศูนย์ต้นทุน ผบค.</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="date" class="block text-sm font-medium text-black">วันที่</label>
-                            <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="date" class="block text-sm font-medium text-black">วันที่</label>
+                                <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                            </div>
+                            <div>
+                                <label for="voucher-number" class="block text-sm font-medium text-black">เลขที่ใบสำคัญจ่าย</label>
+                                <input type="text" id="voucher-number" placeholder="เช่น 001/69" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
                         </div>
                         <div>
                             <label for="description" class="block text-sm font-medium text-black">รายละเอียด</label>
@@ -142,6 +148,10 @@
                                 <option>เงินสด</option>
                                 <option>เช็ค</option>
                             </select>
+                        </div>
+                        <div id="cheque-number-container" class="hidden">
+                            <label for="cheque-number" class="block text-sm font-medium text-black">เลขที่เช็ค</label>
+                            <input type="text" id="cheque-number" placeholder="เช่น 1234567" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-black">สถานะ</label>
