@@ -834,7 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const disbursementData: Disbursement = {
             id: id,
             budgetSource: budgetSourceInput.value,
-            wbs: budgetSourceInput.value === 'หมายเลขงาน' ? wbsInput.value : undefined,
+            wbs: budgetSourceInput.value === 'หมายเลขงาน' ? wbsInput.value : '',
             accountCode: accountCodeInput.value,
             accountName: accountNameInput.value,
             costCenter: costCenterInput.value,
